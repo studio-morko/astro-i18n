@@ -1,0 +1,43 @@
+---
+// LocaleRedirect.astro
+// Client-side component for locale detection and redirection
+---
+
+<script>
+  import { Locale } from '../lib/locale.js';
+
+  // Locale detection and redirection logic
+  async function detectAndRedirect() {
+    const currentPath = window.location.pathname;
+    const pathSegments = currentPath.split('/').filter(Boolean);
+    const firstSegment = pathSegments[0];
+    
+    // Check if locale is already in the path
+    const supportedLocales = await Locale.supported();
+    const isLocaleInPath = supportedLocales.includes(firstSegment);
+    
+    if (!isLocaleInPath) {
+      // Detect the appropriate locale
+      let targetLocale = await Locale.current();
+      
+      // If current locale is not the default, redirect to localized path
+      const defaultLocale = await Locale.default();
+      if (targetLocale !== defaultLocale) {
+        const newPath = `/${targetLocale}${currentPath}`;
+        const newUrl = new URL(newPath, window.location.origin);
+        newUrl.search = window.location.search; // Preserve query parameters
+        
+        window.location.href = newUrl.toString();
+      }
+    }
+  }
+
+  // Run detection on mount
+  if (typeof window !== 'undefined') {
+    // Small delay to ensure DOM is ready
+    setTimeout(() => detectAndRedirect(), 0);
+  }
+</script>
+
+<!-- This component doesn't render anything visible -->
+
