@@ -1,0 +1,56 @@
+{
+  "name": "@mannisto/astro-i18n",
+  "version": "0.0.1",
+  "description": "Astro client-side internationalization (i18n) package for static sites",
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": [
+    "dist/**/*"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "test": "vitest",
+    "test:watch": "vitest --watch",
+    "lint": "biome check .",
+    "lint:fix": "biome check . --write",
+    "format": "biome format . --write",
+    "format:check": "biome format . --check",
+    "clean": "rm -rf dist",
+    "prepublishOnly": "npm run clean && npm run build"
+  },
+  "keywords": [
+    "astro",
+    "i18n",
+    "internationalization",
+    "localization",
+    "typescript",
+    "javascript"
+  ],
+  "author": "Ere Männistö",
+  "license": "MIT",
+  "peerDependencies": {
+    "astro": "^3.0.0 || ^4.0.0"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.1.4",
+    "@types/node": "^20.0.0",
+    "tsup": "^8.0.0",
+    "typescript": "^5.0.0",
+    "vitest": "^1.0.0"
+  },
+  "dependencies": {
+    "@mannisto/astro-config": "git+https://github.com/studio-morko/astro-config.git"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
