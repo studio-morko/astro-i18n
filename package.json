@@ -4,53 +4,47 @@
   "description": "Astro client-side internationalization (i18n) package for static sites",
   "type": "module",
   "main": "./dist/index.js",
-  "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
-      "import": "./dist/index.js",
-      "types": "./dist/index.d.ts"
-    }
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./LocaleRedirect.astro": "./src/components/LocaleRedirect.astro"
   },
   "files": [
-    "dist/**/*"
+    "dist",
+    "src/components/LocaleRedirect.astro"
   ],
   "scripts": {
     "build": "tsup",
     "dev": "tsup --watch",
     "test": "vitest",
-    "test:watch": "vitest --watch",
+    "format": "biome format . --write",
     "lint": "biome check .",
     "lint:fix": "biome check . --write",
-    "format": "biome format . --write",
-    "format:check": "biome format . --check",
-    "clean": "rm -rf dist",
-    "prepublishOnly": "npm run clean && npm run build"
+    "format:check": "biome check . --apply-unsafe",
+    "quality": "./scripts/quality-check.sh",
+    "quality:check": "npm run format:check && npm run lint && npm test -- --run && npm run build"
+  },
+  "peerDependencies": {
+    "astro": "^5.0.0"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.1.4",
+    "@types/node": "^24.2.1",
+    "@vitest/coverage-v8": "^3.2.4",
+    "tsup": "^8.5.0",
+    "typescript": "^5.9.2",
+    "vitest": "^3.2.4"
   },
   "keywords": [
     "astro",
     "i18n",
     "internationalization",
     "localization",
-    "typescript",
-    "javascript"
+    "locale"
   ],
   "author": "Ere Männistö",
-  "license": "MIT",
-  "peerDependencies": {
-    "astro": "^3.0.0 || ^4.0.0 || ^5.0.0"
-  },
-  "devDependencies": {
-    "@biomejs/biome": "2.1.4",
-    "@types/node": "^20.0.0",
-    "tsup": "^8.0.0",
-    "typescript": "^5.0.0",
-    "vitest": "^1.0.0"
-  },
-  "dependencies": {
-    "@mannisto/astro-config": "git+https://github.com/studio-morko/astro-config.git"
-  },
-  "engines": {
-    "node": ">=18.0.0"
-  }
+  "license": "MIT"
 }
