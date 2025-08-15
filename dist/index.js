@@ -7,73 +7,78 @@ var __require = /* @__PURE__ */ ((x) => typeof require !== "undefined" ? require
   if (typeof require !== "undefined") return require.apply(this, arguments);
   throw Error('Dynamic require of "' + x + '" is not supported');
 });
-var cache = { translations: {} };
-var currentLocale = "";
-var FILENAME = "astro.mannisto.mjs";
+
+// src/integration.ts
 var PREFIX = "[@mannisto/astro-i18n]";
-function config(directory = process.cwd()) {
-  if (cache.i18n) return cache.i18n;
-  const configPath = path.join(directory, FILENAME);
-  if (!fs.existsSync(configPath)) {
-    throw new Error(`${FILENAME} configuration file not found: ${configPath}`);
+function validate(config2) {
+  if (typeof config2.enabled !== "boolean") {
+    throw new Error(`${PREFIX}: "enabled" must be a boolean`);
   }
-  let config2;
-  try {
-    config2 = __require(configPath).default;
-  } catch (err) {
-    throw new Error(`${PREFIX}: Failed to load ${FILENAME} config file: ${err}`);
+  if (!config2.enabled) return;
+  if (typeof config2.default !== "string" || !config2.default.trim()) {
+    throw new Error(`${PREFIX}: "default" must be a non-empty string`);
   }
-  if (!config2.i18n || typeof config2.i18n !== "object") {
-    throw new Error(`${PREFIX}: "i18n" object is missing in ${FILENAME} configuration`);
+  if (!Array.isArray(config2.locales) || config2.locales.length === 0) {
+    throw new Error(`${PREFIX}: "locales" must be a non-empty array`);
   }
-  const i18n = config2.i18n;
-  if (typeof i18n.enabled !== "boolean") {
-    throw new Error(`${PREFIX}: "i18n.enabled" must be true or false`);
-  }
-  if (!Array.isArray(i18n.locales) || i18n.locales.length === 0) {
-    throw new Error(`${PREFIX}: "i18n.locales" must be a non-empty array`);
-  }
-  for (const loc of i18n.locales) {
-    if (typeof loc.code !== "string" || !loc.code.trim()) {
-      throw new Error(`${PREFIX}: Locale is missing a valid "code"`);
+  for (const [index, locale] of config2.locales.entries()) {
+    if (typeof locale.code !== "string" || !locale.code.trim()) {
+      throw new Error(`${PREFIX}: "locales[${index}].code" must be a non-empty string`);
     }
-    if (typeof loc.name !== "string" || !loc.name.trim()) {
-      throw new Error(`${PREFIX}: Locale "${loc.code}" is missing a valid "name"`);
+    if (typeof locale.name !== "string" || !locale.name.trim()) {
+      throw new Error(`${PREFIX}: "locales[${index}].name" must be a non-empty string`);
     }
-    if (typeof loc.endonym !== "string" || !loc.endonym.trim()) {
-      throw new Error(`${PREFIX}: Locale "${loc.code}" is missing a valid "endonym"`);
+    if (typeof locale.endonym !== "string" || !locale.endonym.trim()) {
+      throw new Error(`${PREFIX}: "locales[${index}].endonym" must be a non-empty string`);
     }
-    if (!["ltr", "rtl"].includes(loc.dir)) {
-      throw new Error(`${PREFIX}: Locale "${loc.code}" must have "dir" set to "ltr" or "rtl"`);
+    if (locale.dir !== "ltr" && locale.dir !== "rtl") {
+      throw new Error(`${PREFIX}: "locales[${index}].dir" must be either "ltr" or "rtl"`);
     }
   }
-  if (!i18n.default || !i18n.locales.some((l) => l.code === i18n.default)) {
-    throw new Error(`${PREFIX}: "i18n.default" must be one of the supported locale codes`);
+  if (!config2.locales.some((l) => l.code === config2.default)) {
+    throw new Error(`${PREFIX}: "default" must be one of the supported locale codes`);
   }
-  if (i18n.translations) {
-    if (typeof i18n.translations !== "object") {
-      throw new Error(`${PREFIX}: "i18n.translations" must be an object`);
-    }
-    if (typeof i18n.translations.enabled !== "boolean") {
-      throw new Error(`${PREFIX}: "i18n.translations.enabled" must be true or false`);
-    }
-    if (typeof i18n.translations.path !== "string" || !i18n.translations.path.trim()) {
-      throw new Error(`${PREFIX}: "i18n.translations.path" must be a non-empty string`);
-    }
-    if (i18n.translations.enabled) {
-      for (const loc of i18n.locales) {
-        const tsFile = path.join(directory, i18n.translations.path, `${loc.code}.ts`);
-        const jsFile = path.join(directory, i18n.translations.path, `${loc.code}.js`);
-        if (!fs.existsSync(tsFile) && !fs.existsSync(jsFile)) {
-          throw new Error(
-            `${PREFIX}: Missing translations file for locale "${loc.code}" (tried ${loc.code}.ts and ${loc.code}.js)`
-          );
-        }
+  if (config2.translations) {
+    if (config2.translations.enabled === true) {
+      if (typeof config2.translations.path !== "string" || !config2.translations.path.trim()) {
+        throw new Error(
+          `${PREFIX}: "translations.path" must be a non-empty string when translations are enabled`
+        );
       }
     }
   }
-  cache.i18n = i18n;
-  return cache.i18n;
+}
+function i18n(config2) {
+  return {
+    name: "@mannisto/astro-i18n",
+    hooks: {
+      "astro:config:setup": ({ injectScript, logger }) => {
+        validate(config2);
+        logger.info(`${PREFIX}: enabled: ${config2.enabled}`);
+        if (config2.enabled) {
+          logger.info(`${PREFIX}: default locale: ${config2.default}`);
+          logger.info(
+            `${PREFIX}: supported locales: ${config2.locales.map((l) => l.code).join(", ")}`
+          );
+        }
+        injectScript("page-ssr", `globalThis.__ASTRO_I18N_CONFIG__ = ${JSON.stringify(config2)};`);
+      }
+    }
+  };
+}
+var cache = { translations: {} };
+var currentLocale = "";
+var PREFIX2 = "[@mannisto/astro-i18n]";
+function config() {
+  if (cache.i18n) return cache.i18n;
+  const injectedConfig = globalThis.__ASTRO_I18N_CONFIG__;
+  if (injectedConfig) {
+    cache.i18n = injectedConfig;
+    return injectedConfig;
+  }
+  throw new Error(
+    `${PREFIX2}: No i18n configuration found. Make sure to add the i18n integration to your astro.config.mjs`
+  );
 }
 var Locale = {
   /**
@@ -122,38 +127,48 @@ var Locale = {
     return `/${code}${pathname}`;
   },
   /**
+   * Replaces variable placeholders in a text string
+   * @param text - The text containing variable placeholders like {name}
+   * @param vars - Object containing variable values
+   * @returns The text with variables replaced
+   */
+  replace(text, vars) {
+    let result = text;
+    for (const [k, v] of Object.entries(vars)) {
+      result = result.replace(`{${k}}`, String(v));
+    }
+    return result;
+  },
+  /**
    * Returns the translation for a given key, loading it from cache if available.
    * If not in cache, loads it from disk, caches it, and then returns.
    */
-  t(key, locale, vars) {
+  t(key, locale) {
     const cfg = config();
-    if (!cfg.translations?.enabled) return key;
-    const code = locale || Locale.current;
-    if (!cache.translations) {
-      cache.translations = {};
-    }
-    if (!cache.translations[code]) {
-      let translationsPath = path.join(process.cwd(), cfg.translations.path, `${code}.ts`);
-      if (!fs.existsSync(translationsPath)) {
-        translationsPath = path.join(process.cwd(), cfg.translations.path, `${code}.js`);
+    let text = key;
+    if (cfg.translations?.enabled && cfg.translations.path) {
+      const code = locale || Locale.current;
+      if (!cache.translations) {
+        cache.translations = {};
+      }
+      if (!cache.translations[code]) {
+        let translationsPath = path.join(process.cwd(), cfg.translations.path, `${code}.ts`);
         if (!fs.existsSync(translationsPath)) {
-          throw new Error(
-            `${PREFIX}: Missing translations file for locale "${code}" (tried ${code}.ts and ${code}.js)`
-          );
+          translationsPath = path.join(process.cwd(), cfg.translations.path, `${code}.js`);
+          if (!fs.existsSync(translationsPath)) {
+            throw new Error(
+              `${PREFIX2}: Missing translations file for locale "${code}" (tried ${code}.ts and ${code}.js)`
+            );
+          }
         }
+        cache.translations[code] = __require(translationsPath).default;
       }
-      cache.translations[code] = __require(translationsPath).default;
-    }
-    let text = cache.translations[code]?.[key] ?? key;
-    if (vars) {
-      for (const [k, v] of Object.entries(vars)) {
-        text = text.replace(`{${k}}`, String(v));
-      }
+      text = cache.translations[code]?.[key] ?? key;
     }
     return text;
   }
 };
 
-export { Locale };
+export { Locale, i18n };
 //# sourceMappingURL=index.js.map
 //# sourceMappingURL=index.js.map
