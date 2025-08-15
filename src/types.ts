@@ -3,6 +3,7 @@
  */
 export interface LocaleConfig {
   code: string
+  name: string
   endonym: string
   dir: "ltr" | "rtl"
 }
@@ -19,6 +20,7 @@ export interface TranslationConfig {
  * Main internationalization configuration
  */
 export interface I18nConfig {
+  enabled: boolean
   default: string
   locales: LocaleConfig[]
   translations?: TranslationConfig
