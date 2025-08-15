@@ -10,22 +10,18 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
     },
-    "./LocaleRedirect.astro": "./src/components/LocaleRedirect.astro"
+    "./LocaleRedirect.astro": "./dist/components/LocaleRedirect.astro"
   },
   "files": [
-    "dist",
-    "src/components/LocaleRedirect.astro"
+    "dist"
   ],
   "scripts": {
-    "build": "tsup",
+    "build": "tsup && node scripts/build-components.js",
     "dev": "tsup --watch",
     "test": "vitest",
     "format": "biome format . --write",
     "lint": "biome check .",
-    "lint:fix": "biome check . --write",
-    "format:check": "biome check . --apply-unsafe",
-    "quality": "./scripts/quality-check.sh",
-    "quality:check": "npm run format:check && npm run lint && npm test -- --run && npm run build"
+    "lint:fix": "biome check . --write"
   },
   "peerDependencies": {
     "astro": "^5.0.0"
