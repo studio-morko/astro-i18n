@@ -1,7 +1,7 @@
 /**
- * Locale configuration object
+ * Locale configuration
  */
-export interface LocaleConfig {
+export interface Locales {
   code: string
   name: string
   endonym: string
@@ -11,17 +11,17 @@ export interface LocaleConfig {
 /**
  * Translation configuration
  */
-export interface TranslationConfig {
-  enabled: boolean
-  path: string
+export interface Translations {
+  enabled?: boolean
+  path?: string
 }
 
 /**
- * Main internationalization configuration
+ * Internationalization configuration
  */
-export interface I18nConfig {
+export interface Configuration {
   enabled: boolean
   default: string
-  locales: LocaleConfig[]
-  translations?: TranslationConfig
+  locales: Locales[]
+  translations?: Translations
 }
