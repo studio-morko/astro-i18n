@@ -1,6 +1,5 @@
 # Astro Internationalization
 
-[![Code Quality](https://github.com/studio-morko/astro-plugins/actions/workflows/quality.yml/badge.svg)](https://github.com/studio-morko/astro-plugins/actions/workflows/quality.yml)
 [![npm version](https://img.shields.io/npm/v/@mannisto/astro-i18n.svg)](https://www.npmjs.com/package/@mannisto/astro-i18n)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
