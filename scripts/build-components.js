@@ -26,4 +26,4 @@ import { Locale } from "@mannisto/astro-i18n"`
 // Write the transformed file
 fs.writeFileSync(distPath, content);
 
-console.log('✅ Components built successfully');
+console.log('🚀 Astro components built successfully');
