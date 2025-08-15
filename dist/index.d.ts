@@ -1,10 +1,9 @@
-export { config } from '@mannisto/astro-config';
-
 /**
  * Locale configuration object
  */
 interface LocaleConfig {
     code: string;
+    name: string;
     endonym: string;
     dir: "ltr" | "rtl";
 }
@@ -19,46 +18,49 @@ interface TranslationConfig {
  * Main internationalization configuration
  */
 interface I18nConfig {
+    enabled: boolean;
     default: string;
     locales: LocaleConfig[];
     translations?: TranslationConfig;
 }
 
 /**
- * Locale namespace for managing internationalization
+ * Locale namespace functions
  */
 declare const Locale: {
     /**
-     * Gets the default locale code
+     * Returns the enabled status of the i18n configuration
      */
-    default(): Promise<string>;
+    readonly enabled: boolean;
     /**
-     * Gets an array of supported locale codes
+     * Returns the current locale
      */
-    supported(): Promise<string[]>;
+    readonly current: string;
     /**
-     * Gets the current locale code
+     * Returns the supported locales
      */
-    current(): Promise<string>;
+    readonly supported: string[];
     /**
-     * Gets information about a specific locale
-     * @param locale - The locale code to get info for
-     * @returns The locale object or null if not found
+     * Returns the default locale
      */
-    info(locale: string): Promise<LocaleConfig | null>;
+    readonly default: string;
     /**
-     * Sets the current locale and persists it to localStorage
-     * @param localeCode - The locale code to set
+     * Sets the current locale
      */
-    set(localeCode: string): Promise<void>;
+    set(locale: string): void;
     /**
-     * Generates a localized URL
-     * @param path - The base path
-     * @param locale - The locale to use (defaults to current locale)
-     * @returns The localized URL
+     * Returns the locale configuration for a given locale
      */
-    url(path: string, locale?: string): Promise<string>;
+    info(locale?: string): LocaleConfig | undefined;
+    /**
+     * Returns the URL for a given pathname and locale
+     */
+    url(pathname?: string, locale?: string): string;
+    /**
+     * Returns the translation for a given key, loading it from cache if available.
+     * If not in cache, loads it from disk, caches it, and then returns.
+     */
+    t(key: string, locale?: string, vars?: Record<string, string | number>): string;
 };
-declare function resetLocaleState(): void;
 
-export { type I18nConfig, Locale, type LocaleConfig, type TranslationConfig, resetLocaleState };
+export { type I18nConfig, Locale, type LocaleConfig, type TranslationConfig };
