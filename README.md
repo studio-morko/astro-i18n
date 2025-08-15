@@ -18,24 +18,29 @@ pnpm add @mannisto/astro-i18n
 
 ## Configuration
 
-To configure `@mannisto/astro-i18n`, add a `astro.mannisto.mjs` file to your project root:
+Add the integration to your `astro.config.mjs`:
 
 ```mjs
-export default {
-  i18n: {
-    enabled: true,
-    default: "en",
-    locales: [
-      { code: "en", name: "English", endonym: "English", dir: "ltr" },
-      { code: "fi", name: "Finnish", endonym: "Suomi",   dir: "ltr" },
-      { code: "ar", name: "Arabic",  endonym: "العربية", dir: "rtl" },
-    ],
-    translations: {
+import { defineConfig } from 'astro/config';
+import { i18n } from '@mannisto/astro-i18n';
+
+export default defineConfig({
+  integrations: [
+    i18n({
       enabled: true,
-      path: "./src/translations",
-    },
-  },
-};
+      default: "en",
+      locales: [
+        { code: "en", name: "English", endonym: "English", dir: "ltr" },
+        { code: "fi", name: "Finnish", endonym: "Suomi", dir: "ltr" },
+        { code: "ar", name: "Arabic", endonym: "العربية", dir: "rtl" },
+      ],
+      translations: {
+        enabled: true,
+        path: "./src/translations",
+      },
+    }),
+  ],
+});
 ```
 
 ### Options
@@ -64,6 +69,7 @@ export default {
 | `Locale.url`        | `(path: string, locale?: string)` | `string`                                                               | Builds a locale-aware URL. Uses `Locale.current` if `locale` is omitted.                 |
 | `Locale.set`        | `(locale: string)`                | `void`                                                                 | Sets the current locale.                                                                 |
 | `Locale.t`          | `(key: string, locale?: string)`  | `string`                                                               | Retrieves a translation for the given key. Uses `Locale.current` if `locale` is omitted. |
+| `Locale.replace`    | `(text: string, vars: object)`    | `string`                                                               | Replaces variable placeholders in text with provided values.                             |
 
 ---
 
@@ -103,6 +109,9 @@ Locale.set(Astro.params.locale);
     <!-- Get some translations -->
     <h1>{Locale.t("page.about.title")}</h1>
 
+    <!-- Translation with variables -->
+    <p>{Locale.replace(Locale.t("page.about.welcome"), { name: "John" })}</p>
+
     <!-- Link to the home page in the *current* locale -->
     <a href={Locale.url("/")}>
       {Locale.t("page.home.link")}
@@ -124,6 +133,7 @@ Locale.set(Astro.params.locale);
 ```ts
 export default {
   "page.about.title": "About Us",
+  "page.about.welcome": "Welcome {name}!",
   "page.home.link"  : "Go to Homepage",
 };
 ```
@@ -132,6 +142,7 @@ export default {
 ```ts
 export default {
   "page.about.title": "Tietoa meistä",
+  "page.about.welcome": "Tervetuloa {name}!",
   "page.home.link"  : "Palaa etusivulle",
 };
 ```
