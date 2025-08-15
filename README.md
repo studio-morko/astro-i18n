@@ -1,294 +1,144 @@
-# @mannisto/astro-i18n
+# Astro Internationalization
 
-A TypeScript + JavaScript Astro i18n package with static site support.
+[![Code Quality](https://github.com/studio-morko/astro-plugins/actions/workflows/quality.yml/badge.svg)](https://github.com/studio-morko/astro-plugins/actions/workflows/quality.yml)
+[![npm version](https://img.shields.io/npm/v/@mannisto/astro-i18n.svg)](https://www.npmjs.com/package/@mannisto/astro-i18n)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-## Features
+Internationalization plugin for Astro 5+ supporting both static and server/hybrid modes. Designed for simplicity, clean structure, and developer ergonomics.
 
-- 🌍 **Multi-language support** with locale detection
-- 📁 **Single shared config** in `astro.plugins.mjs`
-- 🚀 **Static site compatible** with client-side detection
-- 🎯 **Type-safe** with full TypeScript support
-- 💾 **Persistent preferences** with localStorage
-- 🧪 **Comprehensive testing** with Vitest
+---
 
 ## Installation
 
 ```bash
 npm install @mannisto/astro-i18n
+pnpm add @mannisto/astro-i18n
 ```
 
-## Quick Start
+---
 
-### 1. Create Configuration
+## Configuration
 
-Create `astro.plugins.mjs` in your project root:
+To configure `@mannisto/astro-i18n`, add a `astro.mannisto.mjs` file to your project root:
 
-```javascript
+```mjs
 export default {
   i18n: {
-    default: 'en', // REQUIRED, must be one of the locales below
+    enabled: true,
+    default: "en",
     locales: [
-      { code: 'en', endonym: 'English', dir: 'ltr' },
-      { code: 'fi', endonym: 'Suomi', dir: 'ltr' },
-      { code: 'ar', endonym: 'العربية', dir: 'rtl' }
+      { code: "en", name: "English", endonym: "English", dir: "ltr" },
+      { code: "fi", name: "Finnish", endonym: "Suomi",   dir: "ltr" },
+      { code: "ar", name: "Arabic",  endonym: "العربية", dir: "rtl" },
     ],
     translations: {
       enabled: true,
-      path: "./src/translations"
-    }
-  }
+      path: "./src/translations",
+    },
+  },
 };
 ```
 
-### 2. Use in Your Astro Layout
+### Options
+
+| Key                         | Type      | Required | Default | Description                                                                               |
+| ----------------------------| --------- | -------- | ------- | ----------------------------------------------------------------------------------------- |
+| `i18n.enabled`              | `boolean` | **Yes**  | —       | Enables or disables internationalization.                                                 |
+| `i18n.default`              | `string`  | **Yes**  | —       | Default locale code (must match one in `locales`).                                        |
+| `i18n.locales`              | `array`   | **Yes**  | —       | List of supported locale objects. Each must include `code`, `name`, `endonym`, and `dir`. |
+| `i18n.locales[].code`       | `string`  | **Yes**  | —       | Locale code (e.g., `"en"`, `"fi"`, `"ar"`).                                               |
+| `i18n.locales[].name`       | `string`  | **Yes**  | —       | Locale name in English (exonym).                                                          |
+| `i18n.locales[].endonym`    | `string`  | **Yes**  | —       | Locale name in the native language.                                                       |
+| `i18n.locales[].dir`        | `string`  | **Yes**  | —       | Text direction: `"ltr"` or `"rtl"`.                                                       |
+| `i18n.translations.enabled` | `boolean` | No       | `false` | Whether translations are enabled.                                                         |
+| `i18n.translations.path`    | `string`  | No       | —       | Path to translation files directory (only required if translations are enabled).          |
+
+---
+## Locale API
+
+| Function / Property | Parameters                        | Returns                                                                | Description                                                                              |
+| ------------------- | --------------------------------- | ---------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| `Locale.enabled`    | —                                 | `boolean`                                                              | Whether `i18n` is enabled.                                                               |
+| `Locale.current`    | —                                 | `string`                                                               | The currently active locale code.                                                        |
+| `Locale.supported`  | —                                 | `string[]`                                                             | All supported locale codes.                                                              |
+| `Locale.info`       | `(locale?: string)`               | `{ code: string, name: string, endonym: string, dir: 'ltr' \| 'rtl' }` | Returns details about a locale. Uses `Locale.current` if omitted.                        |
+| `Locale.url`        | `(path: string, locale?: string)` | `string`                                                               | Builds a locale-aware URL. Uses `Locale.current` if `locale` is omitted.                 |
+| `Locale.set`        | `(locale: string)`                | `void`                                                                 | Sets the current locale.                                                                 |
+| `Locale.t`          | `(key: string, locale?: string)`  | `string`                                                               | Retrieves a translation for the given key. Uses `Locale.current` if `locale` is omitted. |
+
+---
+
+## Astro Components
+
+### `<LocaleRedirect />`
+Ensures the user is on a valid locale route.  
+Useful when the locale is missing from the URL, for example if a user navigates directly to a non-localized path.
+
+---
+
+## Usage Example
 
 ```astro
 ---
-// src/layouts/Layout.astro
-import { Locale } from '@mannisto/astro-i18n';
+// src/pages/[locale]/about.astro
+import { Locale, LocaleRedirect } from "@mannisto/astro-i18n";
+
+// Build all locale variations at build time
+export function getStaticPaths() {
+  return Locale.supported.map((locale) => ({
+    params: { locale },
+  }));
+}
+
+// Set locale based on the dynamic route parameter
+Locale.set(Astro.params.locale);
 ---
 
-<html lang={Locale.current} dir={Locale.info(Locale.current)?.dir || 'ltr'}>
+<html lang={Locale.current} dir={Locale.info().dir}>
   <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width" />
-    <title>My Astro Site</title>
+    <!-- Ensure user is on a valid locale -->
+    <LocaleRedirect />
   </head>
+
   <body>
-    <!-- LocaleRedirect component should be copied from src/components/LocaleRedirect.astro -->
-    
-    <slot />
+    <!-- Get some translations -->
+    <h1>{Locale.t("page.about.title")}</h1>
+
+    <!-- Link to the home page in the *current* locale -->
+    <a href={Locale.url("/")}>
+      {Locale.t("page.home.link")}
+    </a>
+
+    <!-- Link to the home page in a *different* locale -->
+    <a href={Locale.url("/", "fi")}>
+      {Locale.info("fi").endonym}
+    </a>
   </body>
 </html>
 ```
 
-### 3. Use Locale API in Components
-
-```astro
----
-// src/pages/index.astro
-import { Locale } from '@mannisto/astro-i18n';
-
-const currentLocale = Locale.current;
-const localeInfo = Locale.info(currentLocale);
 ---
 
-<div>
-  <h1>Welcome to {localeInfo?.endonym}</h1>
-  <p>Current locale: {currentLocale}</p>
-  
-  <nav>
-    {Locale.supported.map(locale => (
-      <a href={Locale.url('/about', locale)}>
-        {Locale.info(locale)?.endonym}
-      </a>
-    ))}
-  </nav>
-</div>
+## Example Translations
+
+**`src/translations/en.ts`**
+```ts
+export default {
+  "page.about.title": "About Us",
+  "page.home.link"  : "Go to Homepage",
+};
 ```
 
-## API Reference
-
-### Locale Namespace
-
-The main `Locale` namespace provides all i18n functionality:
-
-#### Properties
-
-- `Locale.default` - Returns the default locale code
-- `Locale.supported` - Returns array of supported locale codes
-- `Locale.current` - Returns the current locale code
-
-#### Methods
-
-- `Locale.info(locale)` - Returns full locale object or null
-- `Locale.set(locale)` - Sets current locale and persists to localStorage
-- `Locale.url(path, locale?)` - Generates localized URL
-
-### Astro Components
-
-#### `<LocaleRedirect />`
-
-Runs in static sites. On mount, applies locale detection logic and redirects to the correct path.
-
-**Detection order:**
-1. Locale in current path
-2. Saved locale in localStorage
-3. Browser navigator.languages
-4. Default locale from config
-
-**Note:** This component should be copied from `src/components/LocaleRedirect.astro` to your project.
-
-## Configuration
-
-### Required Fields
-
-- `default` - The default locale code (must be in supported locales)
-- `locales` - Array of locale objects
-
-### Locale Object
-
-```typescript
-{
-  code: string;        // Locale code (e.g., 'en', 'fi')
-  endonym: string;     // Native name (e.g., 'English', 'Suomi')
-  dir: 'ltr' | 'rtl';  // Text direction
-}
+**`src/translations/fi.ts`**
+```ts
+export default {
+  "page.about.title": "Tietoa meistä",
+  "page.home.link"  : "Palaa etusivulle",
+};
 ```
 
-### Optional Fields
-
-- `translations` - Translation configuration (for future use)
-
-## Locale Detection Logic
-
-The package uses a sophisticated detection system:
-
-1. **Path-based**: If URL contains a locale (e.g., `/fi/about`), use that
-2. **Persistent**: Check localStorage for previously saved locale
-3. **Browser**: Check `navigator.languages` for browser preferences
-4. **Default**: Fall back to configured default locale
-
-## URL Structure
-
-- **Default locale**: `/about` (no prefix)
-- **Other locales**: `/fi/about`, `/ar/about` (with locale prefix)
-
-## Error Handling
-
-The package throws runtime errors for:
-
-- Missing `astro.plugins.mjs` configuration file
-- Invalid configuration (missing required fields)
-- Default locale not in supported locales list
-- Invalid locale codes in API calls
-
-## TypeScript Support
-
-Full TypeScript support with exported types:
-
-```typescript
-import type {
-  LocaleConfig,
-  I18nConfig,
-} from '@mannisto/astro-i18n';
-```
-
-## Testing
-
-Run tests with:
-
-```bash
-npm test
-```
-
-Run tests in watch mode:
-
-```bash
-npm run test:watch
-```
-
-## Development
-
-Build the package:
-
-```bash
-npm run build
-```
-
-Development mode with watch:
-
-```bash
-npm run dev
-```
-
-## Examples
-
-### Basic Usage
-
-```astro
 ---
-// src/pages/about.astro
-import { Locale } from '@mannisto/astro-i18n';
-
-const currentLocale = Locale.current;
-const supportedLocales = Locale.supported;
----
-
-<div>
-  <h1>About Page</h1>
-  <p>Current locale: {currentLocale}</p>
-  
-  <div>
-    <h2>Available Languages:</h2>
-    <ul>
-      {supportedLocales.map(locale => {
-        const info = Locale.info(locale);
-        return (
-          <li>
-            <a href={Locale.url('/about', locale)}>
-              {info?.endonym}
-            </a>
-          </li>
-        );
-      })}
-    </ul>
-  </div>
-</div>
-```
-
-### Dynamic Locale Switching
-
-```astro
----
-// src/components/LanguageSwitcher.astro
-import { Locale } from '@mannisto/astro-i18n';
----
-
-<script>
-  import { Locale } from '@mannisto/astro-i18n';
-
-  function switchLanguage(locale) {
-    Locale.set(locale);
-    // Redirect to the same page in new locale
-    const currentPath = window.location.pathname;
-    const newPath = Locale.url(currentPath, locale);
-    window.location.href = newPath;
-  }
-
-  // Make function globally available
-  window.switchLanguage = switchLanguage;
-</script>
-
-<div class="language-switcher">
-  {Locale.supported.map(locale => (
-    <button 
-      onclick={`switchLanguage('${locale}')`}
-      class={locale === Locale.current ? 'active' : ''}
-    >
-      {Locale.info(locale)?.endonym}
-    </button>
-  ))}
-</div>
-```
 
 ## License
 
-MIT
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests
-5. Submit a pull request
-
-## Changelog
-
-### 0.0.1
-- Initial release
-- Core Locale namespace API
-- Astro components (LocaleRedirect)
-- TypeScript support
-- Comprehensive testing
+MIT © Studio Mörkö
