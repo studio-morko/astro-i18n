@@ -30,6 +30,7 @@ declare function i18n(config: Configuration): AstroIntegration;
 
 declare global {
     var __ASTRO_I18N_CONFIG__: Configuration | undefined;
+    var __ASTRO_I18N_TRANSLATIONS__: Record<string, Record<string, string>> | undefined;
 }
 /**
  * Locale namespace functions
@@ -71,8 +72,8 @@ declare const Locale: {
      */
     replace(text: string, vars: Record<string, string | number>): string;
     /**
-     * Returns the translation for a given key, loading it from cache if available.
-     * If not in cache, loads it from disk, caches it, and then returns.
+     * Returns the translation for a given key, using injected translations.
+     * No dynamic requires - all translations are loaded at build time.
      */
     t(key: string, locale?: string): string;
 };

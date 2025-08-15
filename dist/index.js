@@ -7,8 +7,6 @@ var __require = /* @__PURE__ */ ((x) => typeof require !== "undefined" ? require
   if (typeof require !== "undefined") return require.apply(this, arguments);
   throw Error('Dynamic require of "' + x + '" is not supported');
 });
-
-// src/integration.ts
 var PREFIX = "[@mannisto/astro-i18n]";
 function validate(config2) {
   if (typeof config2.enabled !== "boolean") {
@@ -48,6 +46,35 @@ function validate(config2) {
     }
   }
 }
+function loadTranslations(config2) {
+  const translations = {};
+  if (config2.translations?.enabled && config2.translations.path) {
+    for (const locale of config2.locales) {
+      const tsPath = path.join(process.cwd(), config2.translations.path, `${locale.code}.ts`);
+      const jsPath = path.join(process.cwd(), config2.translations.path, `${locale.code}.js`);
+      let translationData = {};
+      if (fs.existsSync(tsPath)) {
+        try {
+          translationData = __require(tsPath).default;
+        } catch (error) {
+          throw new Error(`${PREFIX}: Failed to load translation file ${tsPath}: ${error}`);
+        }
+      } else if (fs.existsSync(jsPath)) {
+        try {
+          translationData = __require(jsPath).default;
+        } catch (error) {
+          throw new Error(`${PREFIX}: Failed to load translation file ${jsPath}: ${error}`);
+        }
+      } else {
+        throw new Error(
+          `${PREFIX}: Translation file not found for locale "${locale.code}" (tried ${locale.code}.ts and ${locale.code}.js)`
+        );
+      }
+      translations[locale.code] = translationData;
+    }
+  }
+  return translations;
+}
 function i18n(config2) {
   return {
     name: "@mannisto/astro-i18n",
@@ -61,12 +88,28 @@ function i18n(config2) {
             `${PREFIX}: supported locales: ${config2.locales.map((l) => l.code).join(", ")}`
           );
         }
-        injectScript("page-ssr", `globalThis.__ASTRO_I18N_CONFIG__ = ${JSON.stringify(config2)};`);
+        let translations = {};
+        if (config2.translations?.enabled) {
+          try {
+            translations = loadTranslations(config2);
+            logger.info(
+              `${PREFIX}: loaded translations for ${Object.keys(translations).length} locales`
+            );
+          } catch (error) {
+            logger.error(`${PREFIX}: Failed to load translations: ${error}`);
+            throw error;
+          }
+        }
+        const configScript = `globalThis.__ASTRO_I18N_CONFIG__ = ${JSON.stringify(config2)};`;
+        const translationsScript = `globalThis.__ASTRO_I18N_TRANSLATIONS__ = ${JSON.stringify(translations)};`;
+        injectScript("page-ssr", configScript + translationsScript);
       }
     }
   };
 }
-var cache = { translations: {} };
+
+// src/lib/locale.ts
+var cache = { };
 var currentLocale = "";
 var PREFIX2 = "[@mannisto/astro-i18n]";
 function config() {
@@ -140,30 +183,18 @@ var Locale = {
     return result;
   },
   /**
-   * Returns the translation for a given key, loading it from cache if available.
-   * If not in cache, loads it from disk, caches it, and then returns.
+   * Returns the translation for a given key, using injected translations.
+   * No dynamic requires - all translations are loaded at build time.
    */
   t(key, locale) {
     const cfg = config();
     let text = key;
-    if (cfg.translations?.enabled && cfg.translations.path) {
+    if (cfg.translations?.enabled) {
       const code = locale || Locale.current;
-      if (!cache.translations) {
-        cache.translations = {};
+      const injectedTranslations = globalThis.__ASTRO_I18N_TRANSLATIONS__;
+      if (injectedTranslations?.[code]) {
+        text = injectedTranslations[code][key] ?? key;
       }
-      if (!cache.translations[code]) {
-        let translationsPath = path.join(process.cwd(), cfg.translations.path, `${code}.ts`);
-        if (!fs.existsSync(translationsPath)) {
-          translationsPath = path.join(process.cwd(), cfg.translations.path, `${code}.js`);
-          if (!fs.existsSync(translationsPath)) {
-            throw new Error(
-              `${PREFIX2}: Missing translations file for locale "${code}" (tried ${code}.ts and ${code}.js)`
-            );
-          }
-        }
-        cache.translations[code] = __require(translationsPath).default;
-      }
-      text = cache.translations[code]?.[key] ?? key;
     }
     return text;
   }

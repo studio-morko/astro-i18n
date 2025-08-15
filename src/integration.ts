@@ -1,3 +1,5 @@
+import fs from "node:fs"
+import path from "node:path"
 import type { AstroIntegration } from "astro"
 import type { Configuration } from "./types.js"
 
@@ -56,6 +58,41 @@ function validate(config: Configuration) {
   }
 }
 
+function loadTranslations(config: Configuration): Record<string, Record<string, string>> {
+  const translations: Record<string, Record<string, string>> = {}
+
+  if (config.translations?.enabled && config.translations.path) {
+    for (const locale of config.locales) {
+      const tsPath = path.join(process.cwd(), config.translations.path, `${locale.code}.ts`)
+      const jsPath = path.join(process.cwd(), config.translations.path, `${locale.code}.js`)
+
+      let translationData: Record<string, string> = {}
+
+      if (fs.existsSync(tsPath)) {
+        try {
+          translationData = require(tsPath).default
+        } catch (error) {
+          throw new Error(`${PREFIX}: Failed to load translation file ${tsPath}: ${error}`)
+        }
+      } else if (fs.existsSync(jsPath)) {
+        try {
+          translationData = require(jsPath).default
+        } catch (error) {
+          throw new Error(`${PREFIX}: Failed to load translation file ${jsPath}: ${error}`)
+        }
+      } else {
+        throw new Error(
+          `${PREFIX}: Translation file not found for locale "${locale.code}" (tried ${locale.code}.ts and ${locale.code}.js)`,
+        )
+      }
+
+      translations[locale.code] = translationData
+    }
+  }
+
+  return translations
+}
+
 export default function i18n(config: Configuration): AstroIntegration {
   return {
     name: "@mannisto/astro-i18n",
@@ -71,8 +108,25 @@ export default function i18n(config: Configuration): AstroIntegration {
           )
         }
 
-        // Inject configuration into global scope
-        injectScript("page-ssr", `globalThis.__ASTRO_I18N_CONFIG__ = ${JSON.stringify(config)};`)
+        // Load translations at build time if enabled
+        let translations: Record<string, Record<string, string>> = {}
+        if (config.translations?.enabled) {
+          try {
+            translations = loadTranslations(config)
+            logger.info(
+              `${PREFIX}: loaded translations for ${Object.keys(translations).length} locales`,
+            )
+          } catch (error) {
+            logger.error(`${PREFIX}: Failed to load translations: ${error}`)
+            throw error
+          }
+        }
+
+        // Inject configuration and translations into global scope
+        const configScript = `globalThis.__ASTRO_I18N_CONFIG__ = ${JSON.stringify(config)};`
+        const translationsScript = `globalThis.__ASTRO_I18N_TRANSLATIONS__ = ${JSON.stringify(translations)};`
+
+        injectScript("page-ssr", configScript + translationsScript)
       },
     },
   }

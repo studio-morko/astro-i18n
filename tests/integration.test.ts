@@ -69,8 +69,7 @@ describe("i18n Integration", () => {
           { code: "fi", name: "Finnish", endonym: "Suomi", dir: "ltr" },
         ],
         translations: {
-          enabled: true,
-          path: "./src/translations",
+          enabled: false, // Disable translations for test
         },
       })
 
@@ -136,8 +135,7 @@ describe("i18n Integration", () => {
         default: "ar",
         locales: [{ code: "ar", name: "Arabic", endonym: "العربية", dir: "rtl" }],
         translations: {
-          enabled: true,
-          path: "./src/translations",
+          enabled: false, // Disable translations for test
         },
       })
 

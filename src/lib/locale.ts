@@ -1,10 +1,9 @@
-import fs from "node:fs"
-import path from "node:path"
 import type { Configuration, Locales } from "../types"
 
 // Global configuration injected by the Astro integration
 declare global {
   var __ASTRO_I18N_CONFIG__: Configuration | undefined
+  var __ASTRO_I18N_TRANSLATIONS__: Record<string, Record<string, string>> | undefined
 }
 
 const cache: {
@@ -110,8 +109,8 @@ export const Locale = {
   },
 
   /**
-   * Returns the translation for a given key, loading it from cache if available.
-   * If not in cache, loads it from disk, caches it, and then returns.
+   * Returns the translation for a given key, using injected translations.
+   * No dynamic requires - all translations are loaded at build time.
    */
   t(key: string, locale?: string): string {
     const cfg = config()
@@ -119,32 +118,15 @@ export const Locale = {
     // Start with the key as the base text
     let text = key
 
-    // If translations are enabled and path is provided, try to load from translation files
-    if (cfg.translations?.enabled && cfg.translations.path) {
+    // If translations are enabled, try to get from injected translations
+    if (cfg.translations?.enabled) {
       const code = locale || Locale.current
 
-      // Ensure translations object exists in cache
-      if (!cache.translations) {
-        cache.translations = {}
+      // Get translations from injected global variable
+      const injectedTranslations = globalThis.__ASTRO_I18N_TRANSLATIONS__
+      if (injectedTranslations?.[code]) {
+        text = injectedTranslations[code][key] ?? key
       }
-
-      // Load into cache if not present
-      if (!cache.translations[code]) {
-        // Try .ts first, then .js
-        let translationsPath = path.join(process.cwd(), cfg.translations.path, `${code}.ts`)
-        if (!fs.existsSync(translationsPath)) {
-          translationsPath = path.join(process.cwd(), cfg.translations.path, `${code}.js`)
-          if (!fs.existsSync(translationsPath)) {
-            throw new Error(
-              `${PREFIX}: Missing translations file for locale "${code}" (tried ${code}.ts and ${code}.js)`,
-            )
-          }
-        }
-        cache.translations[code] = require(translationsPath).default
-      }
-
-      // Try to get translation from cache, fallback to key if not found
-      text = cache.translations[code]?.[key] ?? key
     }
 
     return text
