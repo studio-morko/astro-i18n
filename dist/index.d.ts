@@ -53,7 +53,7 @@ declare const Locale: {
      */
     readonly default: string;
     /**
-     * Sets the current locale
+     * Sets the current locale and saves it to localStorage
      */
     set(locale: string): void;
     /**

@@ -12,6 +12,7 @@ const locale = {
   const currentPath = window.location.pathname;
   const firstSegment = currentPath.split("/")[1];
 
+  // If the first segment is not a supported locale, redirect to default
   if (!locale.supported.includes(firstSegment)) {
     const pathWithoutLocale = currentPath.startsWith("/")
       ? currentPath

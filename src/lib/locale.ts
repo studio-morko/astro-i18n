@@ -13,6 +13,18 @@ const cache: {
 
 let currentLocale: string = ""
 
+// Try to get saved locale from localStorage on initialization
+if (typeof window !== "undefined") {
+  try {
+    const saved = localStorage.getItem("astro-i18n-locale")
+    if (saved) {
+      currentLocale = saved
+    }
+  } catch (error) {
+    // Ignore localStorage errors (e.g., in private browsing)
+  }
+}
+
 const PREFIX = "[@mannisto/astro-i18n]"
 
 /**
@@ -53,7 +65,23 @@ export const Locale = {
    * Returns the current locale
    */
   get current(): string {
-    return currentLocale || config().default
+    // If we have a saved locale, validate it's still supported
+    if (currentLocale) {
+      const supported = config().locales.map((l) => l.code)
+      if (supported.includes(currentLocale)) {
+        return currentLocale
+      }
+      // If saved locale is no longer supported, clear it
+      currentLocale = ""
+      if (typeof window !== "undefined") {
+        try {
+          localStorage.removeItem("astro-i18n-locale")
+        } catch (error) {
+          // Ignore localStorage errors
+        }
+      }
+    }
+    return config().default
   },
 
   /**
@@ -71,10 +99,19 @@ export const Locale = {
   },
 
   /**
-   * Sets the current locale
+   * Sets the current locale and saves it to localStorage
    */
   set(locale: string): void {
     currentLocale = locale
+    
+    // Save to localStorage if available
+    if (typeof window !== "undefined") {
+      try {
+        localStorage.setItem("astro-i18n-locale", locale)
+      } catch (error) {
+        // Ignore localStorage errors (e.g., in private browsing)
+      }
+    }
   },
 
   /**

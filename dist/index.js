@@ -106,6 +106,15 @@ function i18n(config2) {
 // src/lib/locale.ts
 var cache = { };
 var currentLocale = "";
+if (typeof window !== "undefined") {
+  try {
+    const saved = localStorage.getItem("astro-i18n-locale");
+    if (saved) {
+      currentLocale = saved;
+    }
+  } catch (error) {
+  }
+}
 var PREFIX = "[@mannisto/astro-i18n]";
 function config() {
   if (cache.i18n) return cache.i18n;
@@ -129,7 +138,20 @@ var Locale = {
    * Returns the current locale
    */
   get current() {
-    return currentLocale || config().default;
+    if (currentLocale) {
+      const supported = config().locales.map((l) => l.code);
+      if (supported.includes(currentLocale)) {
+        return currentLocale;
+      }
+      currentLocale = "";
+      if (typeof window !== "undefined") {
+        try {
+          localStorage.removeItem("astro-i18n-locale");
+        } catch (error) {
+        }
+      }
+    }
+    return config().default;
   },
   /**
    * Returns the supported locales
@@ -144,10 +166,16 @@ var Locale = {
     return config().default;
   },
   /**
-   * Sets the current locale
+   * Sets the current locale and saves it to localStorage
    */
   set(locale) {
     currentLocale = locale;
+    if (typeof window !== "undefined") {
+      try {
+        localStorage.setItem("astro-i18n-locale", locale);
+      } catch (error) {
+      }
+    }
   },
   /**
    * Returns the locale configuration for a given locale
