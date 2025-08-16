@@ -174,7 +174,7 @@ describe("i18n Integration", () => {
   })
 
   describe("Configuration Validation", () => {
-    it("should validate configuration during setup and throw errors for invalid config", () => {
+    it("should validate configuration during setup and throw errors for invalid config", async () => {
       const mockInjectScript = vi.fn()
       const mockLogger = {
         info: vi.fn(),
@@ -190,15 +190,15 @@ describe("i18n Integration", () => {
 
       const setupHook = integration.hooks["astro:config:setup"]!
 
-      expect(() => {
+      await expect(async () => {
         const mockParams = createMockParams()
         mockParams.injectScript = mockInjectScript
         mockParams.logger = mockLogger
-        setupHook(mockParams as any)
-      }).toThrow('"locales" must be a non-empty array')
+        await setupHook(mockParams as any)
+      }).rejects.toThrow('"locales" must be a non-empty array')
     })
 
-    it("should validate individual locale fields", () => {
+    it("should validate individual locale fields", async () => {
       const mockInjectScript = vi.fn()
       const mockLogger = {
         info: vi.fn(),
@@ -216,15 +216,15 @@ describe("i18n Integration", () => {
 
       const setupHook = integration.hooks["astro:config:setup"]!
 
-      expect(() => {
+      await expect(async () => {
         const mockParams = createMockParams()
         mockParams.injectScript = mockInjectScript
         mockParams.logger = mockLogger
-        setupHook(mockParams as any)
-      }).toThrow('"default" must be one of the supported locale codes')
+        await setupHook(mockParams as any)
+      }).rejects.toThrow('"default" must be one of the supported locale codes')
     })
 
-    it("should validate translations configuration when provided", () => {
+    it("should validate translations configuration when provided", async () => {
       const mockInjectScript = vi.fn()
       const mockLogger = {
         info: vi.fn(),
@@ -244,16 +244,16 @@ describe("i18n Integration", () => {
 
       const setupHook = integration.hooks["astro:config:setup"]!
 
-      expect(() => {
+      await expect(async () => {
         const mockParams = createMockParams()
         mockParams.injectScript = mockInjectScript
         mockParams.logger = mockLogger
-        setupHook(mockParams as any)
-      }).toThrow('"translations.path" is required when translations.enabled is true')
+        await setupHook(mockParams as any)
+      }).rejects.toThrow('"translations.path" is required when translations.enabled is true')
     })
 
-    it("should throw error when required fields are missing", () => {
-      expect(() => {
+    it("should throw error when required fields are missing", async () => {
+      await expect(async () => {
         // Test with missing required fields at runtime
         const integration = i18n({
           enabled: true,
@@ -262,8 +262,8 @@ describe("i18n Integration", () => {
 
         const setupHook = integration.hooks["astro:config:setup"]!
         const mockParams = createMockParams()
-        setupHook(mockParams as any)
-      }).toThrow('"default" is required when enabled is true')
+        await setupHook(mockParams as any)
+      }).rejects.toThrow('"default" is required when enabled is true')
     })
   })
 })

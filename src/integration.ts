@@ -2,6 +2,7 @@ import fs from "node:fs"
 import path from "node:path"
 import { parse } from "@babel/parser"
 import traverse from "@babel/traverse"
+
 import type { AstroIntegration } from "astro"
 import type { Configuration } from "./types.js"
 
@@ -118,7 +119,7 @@ export default function i18n(config: Configuration): AstroIntegration {
         let translations: Record<string, Record<string, string>> = {}
         if (config.translations?.enabled) {
           try {
-            translations = loadTranslations(config)
+                                    translations = loadTranslations(config)
             logger.info(`loaded translations for ${Object.keys(translations).length} locales`)
           } catch (error) {
             logger.error(`Failed to load translations: ${error}`)

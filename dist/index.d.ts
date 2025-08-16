@@ -58,8 +58,9 @@ declare const Locale: {
     set(locale: string): void;
     /**
      * Returns the locale configuration for a given locale
+     * Falls back to default locale if the requested locale is not found
      */
-    info(locale?: string): Locales | undefined;
+    info(locale?: string): Locales;
     /**
      * Returns the URL for a given pathname and locale
      */

@@ -79,10 +79,23 @@ export const Locale = {
 
   /**
    * Returns the locale configuration for a given locale
+   * Falls back to default locale if the requested locale is not found
    */
-  info(locale?: string): Locales | undefined {
+  info(locale?: string): Locales {
     const code = locale || Locale.current
-    return config().locales.find((l) => l.code === code)
+    const found = config().locales.find((l) => l.code === code)
+    if (found) {
+      return found
+    }
+    
+    // Fall back to default locale if requested locale not found
+    const defaultLocale = config().locales.find((l) => l.code === config().default)
+    if (defaultLocale) {
+      return defaultLocale
+    }
+    
+    // If even default locale is not found (shouldn't happen with validation), return first available
+    return config().locales[0]
   },
 
   /**

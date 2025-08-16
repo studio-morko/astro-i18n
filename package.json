@@ -15,6 +15,10 @@
   "files": [
     "dist"
   ],
+  "bundledDependencies": [
+    "@babel/parser",
+    "@babel/traverse"
+  ],
   "scripts": {
     "build": "tsup && node scripts/build-components.js",
     "dev": "tsup --watch",

@@ -89,8 +89,9 @@ describe("Locale", () => {
       })
     })
 
-    it("should return undefined for non-existent locale", () => {
-      expect(Locale.info("nonexistent")).toBeUndefined()
+    it("should fall back to default locale for non-existent locale", () => {
+      // Should fall back to default locale when nonexistent locale is requested
+    expect(Locale.info("nonexistent")).toEqual(Locale.info("en"))
     })
 
     it("should generate URLs with locale prefix", () => {

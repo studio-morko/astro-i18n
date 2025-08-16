@@ -1,0 +1,103 @@
+---
+import { Locale } from "@mannisto/astro-i18n";
+
+const { locale } = Astro.params;
+Locale.set(locale!);
+
+const translations = Locale.translations();
+const localeInfo = Locale.info()!;
+---
+
+<html lang={Locale.current} dir={localeInfo.dir}>
+  <head>
+    <meta charset="utf-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width" />
+    <meta name="generator" content={Astro.generator} />
+    <title>Astro i18n Example</title>
+  </head>
+  <body>
+    <main>
+      <h1>{translations.welcome || "Welcome"}</h1>
+      <p>{translations.hello || "Hello world"}</p>
+      
+      <div>
+        <h2>Locale Information</h2>
+        <p><strong>Current:</strong> {Locale.current}</p>
+        <p><strong>Default:</strong> {Locale.default}</p>
+        <p><strong>Supported:</strong> {Locale.supported.join(", ")}</p>
+        <p><strong>Name:</strong> {localeInfo.name}</p>
+        <p><strong>Endonym:</strong> {localeInfo.endonym}</p>
+        <p><strong>Direction:</strong> {localeInfo.dir}</p>
+      </div>
+
+      <div>
+        <h2>Translation Examples</h2>
+        <p><strong>Welcome:</strong> {translations.welcome || "Welcome"}</p>
+        <p><strong>Hello:</strong> {translations.hello || "Hello world"}</p>
+        <p><strong>Greeting with variable:</strong> {Locale.replace(translations.greeting || "Hello {name}", { name: "John" })}</p>
+        <p><strong>Long text:</strong> {translations["long.text"] || "Long text"}</p>
+        <p><strong>Special chars:</strong> {translations["special.chars"] || "Special characters"}</p>
+        <p><strong>Test:</strong> {translations.test || "Test"}</p>
+        <p><strong>Final:</strong> {translations.final || "Final"}</p>
+      </div>
+
+      <div>
+        <h2>Navigation</h2>
+        <nav>
+          <ul>
+            {Locale.supported.map((code) => (
+              <li>
+                <a href={Locale.url("/", code)} class={code === Locale.current ? "active" : ""}>
+                  {Locale.info(code)!.endonym}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </nav>
+      </div>
+
+      <div>
+        <h2>URL Examples</h2>
+        <p><strong>Current URL:</strong> {Locale.url("/", Locale.current)}</p>
+        <p><strong>About page:</strong> {Locale.url("/about", Locale.current)}</p>
+        <p><strong>Contact page:</strong> {Locale.url("/contact", Locale.current)}</p>
+      </div>
+    </main>
+
+    <style>
+      body {
+        font-family: system-ui, sans-serif;
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 2rem;
+        line-height: 1.6;
+      }
+      .active {
+        font-weight: bold;
+        color: #007acc;
+      }
+      nav ul {
+        list-style: none;
+        padding: 0;
+        display: flex;
+        gap: 1rem;
+      }
+      nav a {
+        text-decoration: none;
+        padding: 0.5rem 1rem;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+      }
+      nav a:hover {
+        background: #f0f0f0;
+      }
+      div {
+        margin: 2rem 0;
+        padding: 1rem;
+        border: 1px solid #eee;
+        border-radius: 8px;
+      }
+    </style>
+  </body>
+</html>
