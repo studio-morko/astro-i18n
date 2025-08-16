@@ -1,46 +1,23 @@
 ---
+// @ts-ignore - This is a generated file
+import { Locale } from "@mannisto/astro-i18n"
+
+// biome-ignore lint/correctness/noUnusedVariables: Used in define:vars directive
+const locale = {
+  supported: Locale.supported,
+  default: Locale.default,
+}
 ---
 
-<script>
-  import { Locale } from "@mannisto/astro-i18n";
-  
-  console.log("LocaleRedirect script loaded");
-  console.log("globalThis.__ASTRO_I18N_CONFIG__:", globalThis.__ASTRO_I18N_CONFIG__);
-  
-  // Wait for the page to load and configuration to be injected
-  function checkAndRedirect() {
-    console.log("checkAndRedirect called");
-    console.log("globalThis.__ASTRO_I18N_CONFIG__:", globalThis.__ASTRO_I18N_CONFIG__);
-    
-    // Check if configuration is available
-    if (globalThis.__ASTRO_I18N_CONFIG__) {
-      console.log("Configuration found!");
-      console.log("Locale.supported:", Locale.supported);
-      console.log("Locale.default:", Locale.default);
-      
-      const currentPath = window.location.pathname;
-      const firstSegment = currentPath.split("/")[1];
-      
-      console.log("Current path:", currentPath);
-      console.log("First segment:", firstSegment);
-      console.log("Is first segment supported?", Locale.supported.includes(firstSegment));
+<script is:inline define:vars={locale}>
+  const currentPath = window.location.pathname;
+  const firstSegment = currentPath.split("/")[1];
 
-      if (!Locale.supported.includes(firstSegment)) {
-        const pathWithoutLocale = currentPath.startsWith("/")
-          ? currentPath
-          : "/" + currentPath;
-        const redirectPath = `/${Locale.default}${pathWithoutLocale}`;
-        console.log("Redirecting to:", redirectPath);
-        window.location.replace(redirectPath);
-      } else {
-        console.log("No redirect needed - path already has valid locale");
-      }
-    } else {
-      console.log("Configuration not ready yet, retrying...");
-      // If configuration not ready, try again in a moment
-      setTimeout(checkAndRedirect, 10);
-    }
+  if (!locale.supported.includes(firstSegment)) {
+    const pathWithoutLocale = currentPath.startsWith("/")
+      ? currentPath
+      : "/" + currentPath;
+    const redirectPath = `/${locale.default}${pathWithoutLocale}`;
+    window.location.replace(redirectPath);
   }
-  
-  document.addEventListener('DOMContentLoaded', checkAndRedirect);
 </script>
