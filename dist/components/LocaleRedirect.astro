@@ -1,11 +1,8 @@
 ---
-// @ts-ignore - This is a generated file
-import { Locale } from "@mannisto/astro-i18n"
-
 // biome-ignore lint/correctness/noUnusedVariables: Used in define:vars directive
 const locale = {
-  supported: Locale.supported,
-  default: Locale.default,
+  supported: (globalThis as any).__ASTRO_I18N_CONFIG__?.locales?.map((l: any) => l.code) || [],
+  default: (globalThis as any).__ASTRO_I18N_CONFIG__?.default || "en",
 }
 ---
 

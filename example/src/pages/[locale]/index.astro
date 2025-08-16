@@ -1,6 +1,13 @@
 ---
 import { Locale } from "@mannisto/astro-i18n";
 
+// Build all locale variations at build time
+export function getStaticPaths() {
+  return Locale.supported.map((locale) => ({
+    params: { locale },
+  }));
+}
+
 const { locale } = Astro.params;
 Locale.set(locale!);
 
