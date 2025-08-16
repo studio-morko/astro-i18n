@@ -63,9 +63,8 @@ function loadTranslations(config2) {
               const declaration = path2.node.declaration;
               if (declaration.type === "ObjectExpression") {
                 declaration.properties.forEach((prop) => {
-                  if (prop.type === "ObjectProperty" && prop.value.type === "StringLiteral") {
-                    const key = prop.key.type === "StringLiteral" ? prop.key.value : prop.key.name;
-                    translationData[key] = prop.value.value;
+                  if (prop.type === "ObjectProperty" && prop.key.type === "StringLiteral" && prop.value.type === "StringLiteral") {
+                    translationData[prop.key.value] = prop.value.value;
                   }
                 });
               }

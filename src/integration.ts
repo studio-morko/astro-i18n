@@ -1,7 +1,7 @@
 import fs from "node:fs"
 import path from "node:path"
 import { parse } from "@babel/parser"
-import { default as traverse } from "@babel/traverse"
+import traverse from "@babel/traverse"
 import type { AstroIntegration } from "astro"
 import type { Configuration } from "./types.js"
 
@@ -75,10 +75,12 @@ function loadTranslations(config: Configuration): Record<string, Record<string, 
               const declaration = path.node.declaration
               if (declaration.type === "ObjectExpression") {
                 declaration.properties.forEach((prop) => {
-                  if (prop.type === "ObjectProperty" && prop.value.type === "StringLiteral") {
-                    const key =
-                      prop.key.type === "StringLiteral" ? prop.key.value : (prop.key as any).name
-                    translationData[key] = prop.value.value
+                  if (
+                    prop.type === "ObjectProperty" &&
+                    prop.key.type === "StringLiteral" &&
+                    prop.value.type === "StringLiteral"
+                  ) {
+                    translationData[prop.key.value] = prop.value.value
                   }
                 })
               }

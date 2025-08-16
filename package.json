@@ -24,7 +24,9 @@
     "lint:fix": "biome check . --write"
   },
   "peerDependencies": {
-    "astro": "^5.0.0"
+    "astro": "^5.0.0",
+    "@babel/parser": "^7.28.0",
+    "@babel/traverse": "^7.28.0"
   },
   "devDependencies": {
     "@biomejs/biome": "2.1.4",
@@ -43,9 +45,5 @@
     "locale"
   ],
   "author": "Ere Männistö",
-  "license": "MIT",
-  "dependencies": {
-    "@babel/parser": "^7.28.3",
-    "@babel/traverse": "^7.28.3"
-  }
+  "license": "MIT"
 }
