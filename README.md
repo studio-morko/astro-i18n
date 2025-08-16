@@ -60,16 +60,27 @@ export default defineConfig({
 ---
 ## Locale API
 
-| Function / Property | Parameters                        | Returns                                                                | Description                                                                              |
-| ------------------- | --------------------------------- | ---------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
-| `Locale.enabled`    | —                                 | `boolean`                                                              | Whether `i18n` is enabled.                                                               |
-| `Locale.current`    | —                                 | `string`                                                               | The currently active locale code.                                                        |
-| `Locale.supported`  | —                                 | `string[]`                                                             | All supported locale codes.                                                              |
-| `Locale.info`       | `(locale?: string)`               | `{ code: string, name: string, endonym: string, dir: 'ltr' \| 'rtl' }` | Returns details about a locale. Uses `Locale.current` if omitted.                        |
-| `Locale.url`        | `(path: string, locale?: string)` | `string`                                                               | Builds a locale-aware URL. Uses `Locale.current` if `locale` is omitted.                 |
-| `Locale.set`        | `(locale: string)`                | `void`                                                                 | Sets the current locale.                                                                 |
-| `Locale.t`          | `(key: string, locale?: string)`  | `string`                                                               | Retrieves a translation for the given key. Uses `Locale.current` if `locale` is omitted. |
-| `Locale.replace`    | `(text: string, vars: object)`    | `string`                                                               | Replaces variable placeholders in text with provided values.                             |
+| Function / Property   | Parameters                        | Returns     | Description                                                                              |
+| --------------------- | --------------------------------- | ----------- | ---------------------------------------------------------------------------------------- |
+| `Locale.enabled`      | —                                 | `boolean`   | Whether `i18n` is enabled.                                                               |
+| `Locale.current`      | —                                 | `string`    | The currently active locale code.                                                        |
+| `Locale.supported`    | —                                 | `string[]`  | All supported locale codes.                                                              |
+| `Locale.info`         | `(locale?: string)`               | `Locales[]` | Returns details about a locale. Uses `Locale.current` if omitted.                        |
+| `Locale.url`          | `(path: string, locale?: string)` | `string`    | Builds a locale-aware URL. Uses `Locale.current` if `locale` is omitted.                 |
+| `Locale.set`          | `(locale: string)`                | `void`      | Sets the current locale.                                                                 |
+| `Locale.translations` | `(key: string, locale?: string)`  | `string`    | Retrieves the full translation object. Uses `Locale.current` if `locale` is omitted.     |
+| `Locale.replace`      | `(text: string, vars: object)`    | `string`    | Replaces variable placeholders in text with provided values.                             |
+
+### `Locales` Interface
+
+```ts
+export interface Locales {
+  code   : string        // Language ISO code
+  name   : string        // Name in English
+  endonym: string        // Native name
+  dir    : "ltr" | "rtl" // Write/read direction
+}
+```
 
 ---
 
@@ -97,6 +108,7 @@ export function getStaticPaths() {
 
 // Set locale based on the dynamic route parameter
 Locale.set(Astro.params.locale);
+const t = Locale.translations();
 ---
 
 <html lang={Locale.current} dir={Locale.info().dir}>
@@ -107,14 +119,14 @@ Locale.set(Astro.params.locale);
 
   <body>
     <!-- Get some translations -->
-    <h1>{Locale.t("page.about.title")}</h1>
+    <h1>{t["page.about.title"]}</h1>
 
     <!-- Translation with variables -->
-    <p>{Locale.replace(Locale.t("page.about.welcome"), { name: "John" })}</p>
+    <p>{Locale.replace(t["page.about.welcome"], { name: "John" })}</p>
 
     <!-- Link to the home page in the *current* locale -->
     <a href={Locale.url("/")}>
-      {Locale.t("page.home.link")}
+      {t["page.home.link"]}
     </a>
 
     <!-- Link to the home page in a *different* locale -->

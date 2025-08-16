@@ -70,12 +70,14 @@ function loadTranslations(config: Configuration): Record<string, Record<string, 
 
       if (fs.existsSync(tsPath)) {
         try {
+          // Use require() in Node.js context during build
           translationData = require(tsPath).default
         } catch (error) {
           throw new Error(`${PREFIX}: Failed to load translation file ${tsPath}: ${error}`)
         }
       } else if (fs.existsSync(jsPath)) {
         try {
+          // Use require() in Node.js context during build
           translationData = require(jsPath).default
         } catch (error) {
           throw new Error(`${PREFIX}: Failed to load translation file ${jsPath}: ${error}`)

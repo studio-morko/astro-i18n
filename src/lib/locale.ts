@@ -109,26 +109,28 @@ export const Locale = {
   },
 
   /**
-   * Returns the translation for a given key, using injected translations.
-   * No dynamic requires - all translations are loaded at build time.
+   * Returns the translations object for the current or specified locale.
+   * Uses translations loaded at build time and injected via global variables.
+   *
+   * @param locale - Optional locale code, defaults to current locale
+   * @returns The translations object (synchronous for static generation)
    */
-  t(key: string, locale?: string): string {
+  translations(locale?: string): Record<string, string> {
     const cfg = config()
+    const code = locale || Locale.current
 
-    // Start with the key as the base text
-    let text = key
-
-    // If translations are enabled, try to get from injected translations
-    if (cfg.translations?.enabled) {
-      const code = locale || Locale.current
-
-      // Get translations from injected global variable
-      const injectedTranslations = globalThis.__ASTRO_I18N_TRANSLATIONS__
-      if (injectedTranslations?.[code]) {
-        text = injectedTranslations[code][key] ?? key
-      }
+    // If translations are disabled, return empty object
+    if (!cfg.translations?.enabled) {
+      return {}
     }
 
-    return text
+    // Get translations from injected global variable
+    const injectedTranslations = globalThis.__ASTRO_I18N_TRANSLATIONS__
+    if (injectedTranslations?.[code]) {
+      return injectedTranslations[code]
+    }
+
+    // Return empty object if no translations found
+    return {}
   },
 }

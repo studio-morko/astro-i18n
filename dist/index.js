@@ -183,20 +183,23 @@ var Locale = {
     return result;
   },
   /**
-   * Returns the translation for a given key, using injected translations.
-   * No dynamic requires - all translations are loaded at build time.
+   * Returns the translations object for the current or specified locale.
+   * Uses translations loaded at build time and injected via global variables.
+   *
+   * @param locale - Optional locale code, defaults to current locale
+   * @returns The translations object (synchronous for static generation)
    */
-  t(key, locale) {
+  translations(locale) {
     const cfg = config();
-    let text = key;
-    if (cfg.translations?.enabled) {
-      const code = locale || Locale.current;
-      const injectedTranslations = globalThis.__ASTRO_I18N_TRANSLATIONS__;
-      if (injectedTranslations?.[code]) {
-        text = injectedTranslations[code][key] ?? key;
-      }
+    const code = locale || Locale.current;
+    if (!cfg.translations?.enabled) {
+      return {};
     }
-    return text;
+    const injectedTranslations = globalThis.__ASTRO_I18N_TRANSLATIONS__;
+    if (injectedTranslations?.[code]) {
+      return injectedTranslations[code];
+    }
+    return {};
   }
 };
 

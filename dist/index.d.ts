@@ -72,10 +72,13 @@ declare const Locale: {
      */
     replace(text: string, vars: Record<string, string | number>): string;
     /**
-     * Returns the translation for a given key, using injected translations.
-     * No dynamic requires - all translations are loaded at build time.
+     * Returns the translations object for the current or specified locale.
+     * Uses translations loaded at build time and injected via global variables.
+     *
+     * @param locale - Optional locale code, defaults to current locale
+     * @returns The translations object (synchronous for static generation)
      */
-    t(key: string, locale?: string): string;
+    translations(locale?: string): Record<string, string>;
 };
 
 export { type Configuration, Locale, type Locales, type Translations, i18n };
