@@ -89,11 +89,9 @@ describe("i18n Integration", () => {
       )
 
       // Verify logging of configuration details
-      expect(mockLogger.info).toHaveBeenCalledWith("[@mannisto/astro-i18n]: enabled: true")
-      expect(mockLogger.info).toHaveBeenCalledWith("[@mannisto/astro-i18n]: default locale: en")
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        "[@mannisto/astro-i18n]: supported locales: en, fi",
-      )
+      expect(mockLogger.info).toHaveBeenCalledWith("enabled: true")
+      expect(mockLogger.info).toHaveBeenCalledWith("default locale: en")
+      expect(mockLogger.info).toHaveBeenCalledWith("supported locales: en, fi")
     })
   })
 
@@ -119,7 +117,7 @@ describe("i18n Integration", () => {
       // biome-ignore lint/suspicious/noExplicitAny: Mock for testing Astro integration
       setupHook(mockParams as any)
 
-      expect(mockLogger.info).toHaveBeenCalledWith("[@mannisto/astro-i18n]: enabled: false")
+      expect(mockLogger.info).toHaveBeenCalledWith("enabled: false")
     })
 
     it("should support RTL locales", () => {
@@ -146,8 +144,8 @@ describe("i18n Integration", () => {
       // biome-ignore lint/suspicious/noExplicitAny: Mock for testing Astro integration
       setupHook(mockParams as any)
 
-      expect(mockLogger.info).toHaveBeenCalledWith("[@mannisto/astro-i18n]: default locale: ar")
-      expect(mockLogger.info).toHaveBeenCalledWith("[@mannisto/astro-i18n]: supported locales: ar")
+      expect(mockLogger.info).toHaveBeenCalledWith("default locale: ar")
+      expect(mockLogger.info).toHaveBeenCalledWith("supported locales: ar")
     })
 
     it("should handle translations when disabled", () => {
@@ -172,9 +170,9 @@ describe("i18n Integration", () => {
       // biome-ignore lint/suspicious/noExplicitAny: Mock for testing Astro integration
       setupHook(mockParams as any)
 
-      expect(mockLogger.info).toHaveBeenCalledWith("[@mannisto/astro-i18n]: enabled: true")
-      expect(mockLogger.info).toHaveBeenCalledWith("[@mannisto/astro-i18n]: default locale: en")
-      expect(mockLogger.info).toHaveBeenCalledWith("[@mannisto/astro-i18n]: supported locales: en")
+      expect(mockLogger.info).toHaveBeenCalledWith("enabled: true")
+      expect(mockLogger.info).toHaveBeenCalledWith("default locale: en")
+      expect(mockLogger.info).toHaveBeenCalledWith("supported locales: en")
     })
   })
 

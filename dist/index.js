@@ -1,46 +1,40 @@
 import fs from 'fs';
 import path from 'path';
 
-var __require = /* @__PURE__ */ ((x) => typeof require !== "undefined" ? require : typeof Proxy !== "undefined" ? new Proxy(x, {
-  get: (a, b) => (typeof require !== "undefined" ? require : a)[b]
-}) : x)(function(x) {
-  if (typeof require !== "undefined") return require.apply(this, arguments);
-  throw Error('Dynamic require of "' + x + '" is not supported');
-});
-var PREFIX = "[@mannisto/astro-i18n]";
+// src/integration.ts
 function validate(config2) {
   if (typeof config2.enabled !== "boolean") {
-    throw new Error(`${PREFIX}: "enabled" must be a boolean`);
+    throw new Error(`"enabled" must be a boolean`);
   }
   if (!config2.enabled) return;
   if (typeof config2.default !== "string" || !config2.default.trim()) {
-    throw new Error(`${PREFIX}: "default" must be a non-empty string`);
+    throw new Error(`"default" must be a non-empty string`);
   }
   if (!Array.isArray(config2.locales) || config2.locales.length === 0) {
-    throw new Error(`${PREFIX}: "locales" must be a non-empty array`);
+    throw new Error(`"locales" must be a non-empty array`);
   }
   for (const [index, locale] of config2.locales.entries()) {
     if (typeof locale.code !== "string" || !locale.code.trim()) {
-      throw new Error(`${PREFIX}: "locales[${index}].code" must be a non-empty string`);
+      throw new Error(`"locales[${index}].code" must be a non-empty string`);
     }
     if (typeof locale.name !== "string" || !locale.name.trim()) {
-      throw new Error(`${PREFIX}: "locales[${index}].name" must be a non-empty string`);
+      throw new Error(`"locales[${index}].name" must be a non-empty string`);
     }
     if (typeof locale.endonym !== "string" || !locale.endonym.trim()) {
-      throw new Error(`${PREFIX}: "locales[${index}].endonym" must be a non-empty string`);
+      throw new Error(`"locales[${index}].endonym" must be a non-empty string`);
     }
     if (locale.dir !== "ltr" && locale.dir !== "rtl") {
-      throw new Error(`${PREFIX}: "locales[${index}].dir" must be either "ltr" or "rtl"`);
+      throw new Error(`"locales[${index}].dir" must be either "ltr" or "rtl"`);
     }
   }
   if (!config2.locales.some((l) => l.code === config2.default)) {
-    throw new Error(`${PREFIX}: "default" must be one of the supported locale codes`);
+    throw new Error(`"default" must be one of the supported locale codes`);
   }
   if (config2.translations) {
     if (config2.translations.enabled === true) {
       if (typeof config2.translations.path !== "string" || !config2.translations.path.trim()) {
         throw new Error(
-          `${PREFIX}: "translations.path" must be a non-empty string when translations are enabled`
+          `"translations.path" must be a non-empty string when translations are enabled`
         );
       }
     }
@@ -55,19 +49,33 @@ function loadTranslations(config2) {
       let translationData = {};
       if (fs.existsSync(tsPath)) {
         try {
-          translationData = __require(tsPath).default;
+          const content = fs.readFileSync(tsPath, "utf8");
+          const match = content.match(/export\s+default\s*(\{[\s\S]*\})\s*;?\s*$/);
+          if (match) {
+            const objectContent = match[1].replace(/(\w+):/g, '"$1":').replace(/'/g, '"');
+            translationData = JSON.parse(objectContent);
+          } else {
+            throw new Error(`Invalid translation file format in ${tsPath}`);
+          }
         } catch (error) {
-          throw new Error(`${PREFIX}: Failed to load translation file ${tsPath}: ${error}`);
+          throw new Error(`Failed to load translation file ${tsPath}: ${error}`);
         }
       } else if (fs.existsSync(jsPath)) {
         try {
-          translationData = __require(jsPath).default;
+          const content = fs.readFileSync(jsPath, "utf8");
+          const match = content.match(/export\s+default\s*(\{[\s\S]*\})\s*;?\s*$/);
+          if (match) {
+            const objectContent = match[1].replace(/(\w+):/g, '"$1":').replace(/'/g, '"');
+            translationData = JSON.parse(objectContent);
+          } else {
+            throw new Error(`Invalid translation file format in ${jsPath}`);
+          }
         } catch (error) {
-          throw new Error(`${PREFIX}: Failed to load translation file ${jsPath}: ${error}`);
+          throw new Error(`Failed to load translation file ${jsPath}: ${error}`);
         }
       } else {
         throw new Error(
-          `${PREFIX}: Translation file not found for locale "${locale.code}" (tried ${locale.code}.ts and ${locale.code}.js)`
+          `Translation file not found for locale "${locale.code}" (tried ${locale.code}.ts and ${locale.code}.js)`
         );
       }
       translations[locale.code] = translationData;
@@ -81,22 +89,18 @@ function i18n(config2) {
     hooks: {
       "astro:config:setup": ({ injectScript, logger }) => {
         validate(config2);
-        logger.info(`${PREFIX}: enabled: ${config2.enabled}`);
+        logger.info(`enabled: ${config2.enabled}`);
         if (config2.enabled) {
-          logger.info(`${PREFIX}: default locale: ${config2.default}`);
-          logger.info(
-            `${PREFIX}: supported locales: ${config2.locales.map((l) => l.code).join(", ")}`
-          );
+          logger.info(`default locale: ${config2.default}`);
+          logger.info(`supported locales: ${config2.locales.map((l) => l.code).join(", ")}`);
         }
         let translations = {};
         if (config2.translations?.enabled) {
           try {
             translations = loadTranslations(config2);
-            logger.info(
-              `${PREFIX}: loaded translations for ${Object.keys(translations).length} locales`
-            );
+            logger.info(`loaded translations for ${Object.keys(translations).length} locales`);
           } catch (error) {
-            logger.error(`${PREFIX}: Failed to load translations: ${error}`);
+            logger.error(`Failed to load translations: ${error}`);
             throw error;
           }
         }
@@ -111,7 +115,7 @@ function i18n(config2) {
 // src/lib/locale.ts
 var cache = { };
 var currentLocale = "";
-var PREFIX2 = "[@mannisto/astro-i18n]";
+var PREFIX = "[@mannisto/astro-i18n]";
 function config() {
   if (cache.i18n) return cache.i18n;
   const injectedConfig = globalThis.__ASTRO_I18N_CONFIG__;
@@ -120,7 +124,7 @@ function config() {
     return injectedConfig;
   }
   throw new Error(
-    `${PREFIX2}: No i18n configuration found. Make sure to add the i18n integration to your astro.config.mjs`
+    `${PREFIX}: No i18n configuration found. Make sure to add the i18n integration to your astro.config.mjs`
   );
 }
 var Locale = {
