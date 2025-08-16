@@ -134,6 +134,10 @@ export default function i18n(config: Configuration): AstroIntegration {
         const configScript = `globalThis.__ASTRO_I18N_CONFIG__ = ${JSON.stringify(config)};`
         const translationsScript = `globalThis.__ASTRO_I18N_TRANSLATIONS__ = ${JSON.stringify(translations)};`
 
+        // Debug: log what we're injecting
+        logger.info(`Injecting config: ${configScript}`)
+        logger.info(`Injecting translations: ${translationsScript}`)
+
         injectScript("head-inline", configScript + translationsScript)
       },
     },

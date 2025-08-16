@@ -1,0 +1,73 @@
+---
+import { Locale } from "@mannisto/astro-i18n"
+
+// biome-ignore lint/correctness/noUnusedVariables: Used in define:vars directive
+const locale = {
+  supported: Locale.supported,
+  default: Locale.default,
+  current: Locale.current,
+}
+---
+
+<script is:inline define:vars={locale}>
+  console.log("🔍 LocalLocaleRedirect Debug Info:")
+  console.log("Locale from define:vars:", locale)
+  console.log("globalThis.__ASTRO_I18N_CONFIG__:", globalThis.__ASTRO_I18N_CONFIG__)
+  console.log("globalThis.__ASTRO_I18N_TRANSLATIONS__:", globalThis.__ASTRO_I18N_TRANSLATIONS__)
+  
+  // Check localStorage
+  const savedLocale = localStorage.getItem("astro-i18n-locale")
+  console.log("Saved locale from localStorage:", savedLocale)
+  
+  const currentPath = window.location.pathname;
+  const firstSegment = currentPath.split("/")[1];
+  
+  console.log("Current path:", currentPath)
+  console.log("First segment:", firstSegment)
+  console.log("Supported locales:", locale.supported)
+  console.log("Default locale:", locale.default)
+  
+  // If we're at the root and not already on a localized path
+  if (currentPath === "/" || currentPath === "") {
+    console.log("📍 At root, redirecting to default locale")
+    
+    // Check if we have a saved locale preference
+    if (savedLocale && locale.supported.includes(savedLocale)) {
+      console.log("🔄 Redirecting to saved locale:", savedLocale)
+      window.location.href = `/${savedLocale}/`
+    } else {
+      console.log("🔄 Redirecting to default locale:", locale.default)
+      window.location.href = `/${locale.default}/`
+    }
+  }
+</script>
+
+<div style="background: #f0f0f0; padding: 10px; margin: 10px 0; border-radius: 5px; font-family: monospace; font-size: 12px;">
+  <strong>LocalLocaleRedirect Debug:</strong><br>
+  Current Path: <span id="current-path"></span><br>
+  First Segment: <span id="first-segment"></span><br>
+  Supported: <span id="supported"></span><br>
+  Default: <span id="default"></span><br>
+  Saved Locale: <span id="saved-locale"></span><br>
+  Global Config: <span id="global-config"></span><br>
+  Global Translations: <span id="global-translations"></span>
+</div>
+
+<script is:inline define:vars={locale}>
+  // Update debug display
+  const currentPathEl = document.getElementById("current-path")
+  const firstSegmentEl = document.getElementById("first-segment")
+  const supportedEl = document.getElementById("supported")
+  const defaultEl = document.getElementById("default")
+  const savedLocaleEl = document.getElementById("saved-locale")
+  const globalConfigEl = document.getElementById("global-config")
+  const globalTranslationsEl = document.getElementById("global-translations")
+  
+  if (currentPathEl) currentPathEl.textContent = window.location.pathname
+  if (firstSegmentEl) firstSegmentEl.textContent = window.location.pathname.split("/")[1] || "none"
+  if (supportedEl) supportedEl.textContent = JSON.stringify(locale.supported)
+  if (defaultEl) defaultEl.textContent = locale.default
+  if (savedLocaleEl) savedLocaleEl.textContent = localStorage.getItem("astro-i18n-locale") || "none"
+  if (globalConfigEl) globalConfigEl.textContent = globalThis.__ASTRO_I18N_CONFIG__ ? "available" : "undefined"
+  if (globalTranslationsEl) globalTranslationsEl.textContent = globalThis.__ASTRO_I18N_TRANSLATIONS__ ? "available" : "undefined"
+</script>

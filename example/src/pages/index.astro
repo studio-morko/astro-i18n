@@ -1,13 +1,12 @@
 ---
-import LocaleRedirect from "@mannisto/astro-i18n/LocaleRedirect.astro";
-import { Locale } from "@mannisto/astro-i18n";
+import { Locale } from "@mannisto/astro-i18n"
+import LocalLocaleRedirect from "../components/LocalLocaleRedirect.astro"
 
 Locale.set(Locale.default);
 ---
 
 <html lang="en">
 	<head>
-		<LocaleRedirect />
 		<meta charset="utf-8" />
 		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 		<meta name="viewport" content="width=device-width" />
@@ -15,6 +14,8 @@ Locale.set(Locale.default);
 		<title>Astro</title>
 	</head>
 	<body>
-		<h1>Astro</h1>
+		<LocalLocaleRedirect />
+		<h1>Welcome to Astro</h1>
+		<p>This is the root page. You should be redirected to a localized page.</p>
 	</body>
 </html>

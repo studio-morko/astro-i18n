@@ -1,0 +1,68 @@
+---
+import { Locale } from "@mannisto/astro-i18n"
+---
+
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+		<meta name="viewport" content="width=device-width" />
+		<meta name="generator" content={Astro.generator} />
+		<title>Locale Test</title>
+	</head>
+	<body>
+		<h1>Locale Test Page</h1>
+		
+		<div style="background: #f0f0f0; padding: 20px; margin: 20px 0; border-radius: 5px;">
+			<h2>Current State:</h2>
+			<p><strong>Current Locale:</strong> {Locale.current}</p>
+			<p><strong>Default Locale:</strong> {Locale.default}</p>
+			<p><strong>Supported Locales:</strong> {Locale.supported.join(", ")}</p>
+		</div>
+
+		<div style="background: #e0f0e0; padding: 20px; margin: 20px 0; border-radius: 5px;">
+			<h2>Test Locale Setting:</h2>
+			<button onclick="setLocale('en')" style="margin: 5px; padding: 10px;">Set to English</button>
+			<button onclick="setLocale('fi')" style="margin: 5px; padding: 10px;">Set to Finnish</button>
+			<button onclick="clearLocale()" style="margin: 5px; padding: 10px;">Clear Saved Locale</button>
+			<button onclick="checkStorage()" style="margin: 5px; padding: 10px;">Check localStorage</button>
+		</div>
+
+		<div id="storage-info" style="background: #f0e0e0; padding: 20px; margin: 20px 0; border-radius: 5px;">
+			<h2>Storage Info:</h2>
+			<p id="storage-content">Click "Check localStorage" to see saved data</p>
+		</div>
+
+		<script>
+			function setLocale(locale: string) {
+				// Import and use the Locale API
+				import('@mannisto/astro-i18n').then(({ Locale }) => {
+					Locale.set(locale)
+					alert(`Locale set to: ${locale}`)
+					checkStorage()
+				})
+			}
+
+			function clearLocale() {
+				localStorage.removeItem("astro-i18n-locale")
+				alert("Saved locale cleared")
+				checkStorage()
+			}
+
+			function checkStorage() {
+				const saved = localStorage.getItem("astro-i18n-locale")
+				const content = document.getElementById("storage-content")
+				if (content) {
+					content.innerHTML = `
+						<strong>localStorage.getItem("astro-i18n-locale"):</strong> ${saved || "null"}<br>
+						<strong>globalThis.__ASTRO_I18N_CONFIG__:</strong> ${globalThis.__ASTRO_I18N_CONFIG__ ? "available" : "undefined"}<br>
+						<strong>globalThis.__ASTRO_I18N_TRANSLATIONS__:</strong> ${globalThis.__ASTRO_I18N_TRANSLATIONS__ ? "available" : "undefined"}
+					`
+				}
+			}
+
+			// Check storage on page load
+			checkStorage()
+		</script>
+	</body>
+</html>
