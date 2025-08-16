@@ -15,10 +15,7 @@
   "files": [
     "dist"
   ],
-  "bundledDependencies": [
-    "@babel/parser",
-    "@babel/traverse"
-  ],
+
   "scripts": {
     "build": "tsup && node scripts/build-components.js",
     "dev": "tsup --watch",
@@ -31,12 +28,9 @@
     "astro": "^5.0.0"
   },
   "dependencies": {
-    "@babel/parser": "^7.28.3",
-    "@babel/traverse": "^7.28.3"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.2.0",
-    "@types/babel__traverse": "^7.28.0",
     "@types/node": "^24.2.1",
     "@vitest/coverage-v8": "^3.2.4",
     "tsup": "^8.5.0",

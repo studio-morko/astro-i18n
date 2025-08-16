@@ -9,7 +9,7 @@ export default defineConfig({
   clean: true,
   treeshake: true,
   external: ['astro'],
-  noExternal: ['@babel/parser', '@babel/traverse'],
+
   outDir: 'dist',
   target: 'es2022',
   minify: false,

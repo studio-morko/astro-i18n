@@ -1,7 +1,5 @@
 import fs from "node:fs"
 import path from "node:path"
-import { parse } from "@babel/parser"
-import traverse from "@babel/traverse"
 
 import type { AstroIntegration } from "astro"
 import type { Configuration } from "./types.js"
@@ -41,52 +39,54 @@ function loadTranslations(config: Configuration): Record<string, Record<string, 
       if (fs.existsSync(tsPath)) {
         try {
           const content = fs.readFileSync(tsPath, "utf8")
-          const ast = parse(content, {
-            sourceType: "module",
-            plugins: ["typescript"],
-          })
-
-          traverse(ast, {
-            ExportDefaultDeclaration(path) {
-              const declaration = path.node.declaration
-              if (declaration.type === "ObjectExpression") {
-                declaration.properties.forEach((prop) => {
-                  if (prop.type === "ObjectProperty" && prop.value.type === "StringLiteral") {
-                    const key =
-                      prop.key.type === "StringLiteral" ? prop.key.value : (prop.key as any).name
-                    translationData[key] = prop.value.value
-                  }
-                })
-              }
-            },
-          })
+          
+          // Remove comments
+          const noComments = content
+            .replace(/\/\*[\s\S]*?\*\//g, '') // Remove /* */ comments
+            .replace(/\/\/.*$/gm, '') // Remove // comments
+          
+          // Extract the export default object
+          const match = noComments.match(/export\s+default\s*(\{[\s\S]*\})\s*;?\s*$/)
+          if (match) {
+            const objectContent = match[1]
+            
+            // Parse key-value pairs
+            const keyValueRegex = /(["']?)([^"'\s:]+)\1\s*:\s*["']([^"']*)["']/g
+            let keyValueMatch
+            
+            while ((keyValueMatch = keyValueRegex.exec(objectContent)) !== null) {
+              const key = keyValueMatch[2]
+              const value = keyValueMatch[3]
+              translationData[key] = value
+            }
+          }
         } catch (error) {
           throw new Error(`Failed to load translation file ${tsPath}: ${error}`)
         }
       } else if (fs.existsSync(jsPath)) {
         try {
           const content = fs.readFileSync(jsPath, "utf8")
-          const ast = parse(content, {
-            sourceType: "module",
-            plugins: ["typescript"],
-          })
-
-          traverse(ast, {
-            ExportDefaultDeclaration(path) {
-              const declaration = path.node.declaration
-              if (declaration.type === "ObjectExpression") {
-                declaration.properties.forEach((prop) => {
-                  if (
-                    prop.type === "ObjectProperty" &&
-                    prop.key.type === "StringLiteral" &&
-                    prop.value.type === "StringLiteral"
-                  ) {
-                    translationData[prop.key.value] = prop.value.value
-                  }
-                })
-              }
-            },
-          })
+          
+          // Remove comments
+          const noComments = content
+            .replace(/\/\*[\s\S]*?\*\//g, '') // Remove /* */ comments
+            .replace(/\/\/.*$/gm, '') // Remove // comments
+          
+          // Extract the export default object
+          const match = noComments.match(/export\s+default\s*(\{[\s\S]*\})\s*;?\s*$/)
+          if (match) {
+            const objectContent = match[1]
+            
+            // Parse key-value pairs
+            const keyValueRegex = /(["']?)([^"'\s:]+)\1\s*:\s*["']([^"']*)["']/g
+            let keyValueMatch
+            
+            while ((keyValueMatch = keyValueRegex.exec(objectContent)) !== null) {
+              const key = keyValueMatch[2]
+              const value = keyValueMatch[3]
+              translationData[key] = value
+            }
+          }
         } catch (error) {
           throw new Error(`Failed to load translation file ${jsPath}: ${error}`)
         }
