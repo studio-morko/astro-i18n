@@ -1,20 +1,28 @@
 ---
-// biome-ignore lint/correctness/noUnusedVariables: Used in define:vars directive
-const locale = {
-  supported: (globalThis as any).__ASTRO_I18N_CONFIG__?.locales?.map((l: any) => l.code) || [],
-  default: (globalThis as any).__ASTRO_I18N_CONFIG__?.default || "en",
-}
 ---
 
-<script is:inline define:vars={locale}>
-  const currentPath = window.location.pathname;
-  const firstSegment = currentPath.split("/")[1];
+<script>
+  import { Locale } from "@mannisto/astro-i18n";
+  
+  // Wait for the page to load and configuration to be injected
+  function checkAndRedirect() {
+    // Check if configuration is available
+    if (globalThis.__ASTRO_I18N_CONFIG__) {
+      const currentPath = window.location.pathname;
+      const firstSegment = currentPath.split("/")[1];
 
-  if (!locale.supported.includes(firstSegment)) {
-    const pathWithoutLocale = currentPath.startsWith("/")
-      ? currentPath
-      : "/" + currentPath;
-    const redirectPath = `/${locale.default}${pathWithoutLocale}`;
-    window.location.replace(redirectPath);
+      if (!Locale.supported.includes(firstSegment)) {
+        const pathWithoutLocale = currentPath.startsWith("/")
+          ? currentPath
+          : "/" + currentPath;
+        const redirectPath = `/${Locale.default}${pathWithoutLocale}`;
+        window.location.replace(redirectPath);
+      }
+    } else {
+      // If configuration not ready, try again in a moment
+      setTimeout(checkAndRedirect, 10);
+    }
   }
+  
+  document.addEventListener('DOMContentLoaded', checkAndRedirect);
 </script>
