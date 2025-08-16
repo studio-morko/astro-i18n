@@ -1,58 +1,29 @@
 import fs from "node:fs"
 import path from "node:path"
+import { parse } from "@babel/parser"
+import traverse from "@babel/traverse"
 import type { AstroIntegration } from "astro"
 import type { Configuration } from "./types.js"
 
-function validate(config: Configuration) {
-  // Validate enabled field
-  if (typeof config.enabled !== "boolean") {
-    throw new Error(`"enabled" must be a boolean`)
+function validate(config: Configuration): void {
+  if (!config.enabled) {
+    return
   }
 
-  // If disabled, no further validation needed
-  if (!config.enabled) return
-
-  // Validate default locale
-  if (typeof config.default !== "string" || !config.default.trim()) {
-    throw new Error(`"default" must be a non-empty string`)
+  if (!config.default) {
+    throw new Error('"default" is required when enabled is true')
   }
 
-  // Validate locales array
-  if (!Array.isArray(config.locales) || config.locales.length === 0) {
-    throw new Error(`"locales" must be a non-empty array`)
+  if (!config.locales || !Array.isArray(config.locales) || config.locales.length === 0) {
+    throw new Error('"locales" must be a non-empty array')
   }
 
-  // Validate each locale in the array
-  for (const [index, locale] of config.locales.entries()) {
-    if (typeof locale.code !== "string" || !locale.code.trim()) {
-      throw new Error(`"locales[${index}].code" must be a non-empty string`)
-    }
-    if (typeof locale.name !== "string" || !locale.name.trim()) {
-      throw new Error(`"locales[${index}].name" must be a non-empty string`)
-    }
-    if (typeof locale.endonym !== "string" || !locale.endonym.trim()) {
-      throw new Error(`"locales[${index}].endonym" must be a non-empty string`)
-    }
-    if (locale.dir !== "ltr" && locale.dir !== "rtl") {
-      throw new Error(`"locales[${index}].dir" must be either "ltr" or "rtl"`)
-    }
-  }
-
-  // Validate default locale exists in locales
   if (!config.locales.some((l) => l.code === config.default)) {
-    throw new Error(`"default" must be one of the supported locale codes`)
+    throw new Error('"default" must be one of the supported locale codes')
   }
 
-  // Validate translations configuration if it exists
-  if (config.translations) {
-    // If translations.enabled is explicitly true, validate the path
-    if (config.translations.enabled === true) {
-      if (typeof config.translations.path !== "string" || !config.translations.path.trim()) {
-        throw new Error(
-          `"translations.path" must be a non-empty string when translations are enabled`,
-        )
-      }
-    }
+  if (config.translations?.enabled && !config.translations.path) {
+    throw new Error('"translations.path" is required when translations.enabled is true')
   }
 }
 
@@ -64,41 +35,55 @@ function loadTranslations(config: Configuration): Record<string, Record<string, 
       const tsPath = path.join(process.cwd(), config.translations.path, `${locale.code}.ts`)
       const jsPath = path.join(process.cwd(), config.translations.path, `${locale.code}.js`)
 
-      let translationData: Record<string, string> = {}
+      const translationData: Record<string, string> = {}
 
       if (fs.existsSync(tsPath)) {
         try {
-          // Read file content and parse it safely
           const content = fs.readFileSync(tsPath, "utf8")
-          // Extract the object content between export default and the end
-          const match = content.match(/export\s+default\s*(\{[\s\S]*\})\s*;?\s*$/)
-          if (match) {
-            // Parse the object content as JSON (after some cleanup)
-            const objectContent = match[1]
-              .replace(/(\w+):/g, '"$1":') // Convert keys to quoted strings
-              .replace(/'/g, '"') // Replace single quotes with double quotes
-            translationData = JSON.parse(objectContent)
-          } else {
-            throw new Error(`Invalid translation file format in ${tsPath}`)
-          }
+          const ast = parse(content, {
+            sourceType: "module",
+            plugins: ["typescript"],
+          })
+
+          traverse(ast, {
+            ExportDefaultDeclaration(path) {
+              const declaration = path.node.declaration
+              if (declaration.type === "ObjectExpression") {
+                declaration.properties.forEach((prop) => {
+                  if (prop.type === "ObjectProperty" && prop.value.type === "StringLiteral") {
+                    const key =
+                      prop.key.type === "StringLiteral" ? prop.key.value : (prop.key as any).name
+                    translationData[key] = prop.value.value
+                  }
+                })
+              }
+            },
+          })
         } catch (error) {
           throw new Error(`Failed to load translation file ${tsPath}: ${error}`)
         }
       } else if (fs.existsSync(jsPath)) {
         try {
-          // Read file content and parse it safely
           const content = fs.readFileSync(jsPath, "utf8")
-          // Extract the object content between export default and the end
-          const match = content.match(/export\s+default\s*(\{[\s\S]*\})\s*;?\s*$/)
-          if (match) {
-            // Parse the object content as JSON (after some cleanup)
-            const objectContent = match[1]
-              .replace(/(\w+):/g, '"$1":') // Convert keys to quoted strings
-              .replace(/'/g, '"') // Replace single quotes with double quotes
-            translationData = JSON.parse(objectContent)
-          } else {
-            throw new Error(`Invalid translation file format in ${jsPath}`)
-          }
+          const ast = parse(content, {
+            sourceType: "module",
+            plugins: ["typescript"],
+          })
+
+          traverse(ast, {
+            ExportDefaultDeclaration(path) {
+              const declaration = path.node.declaration
+              if (declaration.type === "ObjectExpression") {
+                declaration.properties.forEach((prop) => {
+                  if (prop.type === "ObjectProperty" && prop.value.type === "StringLiteral") {
+                    const key =
+                      prop.key.type === "StringLiteral" ? prop.key.value : (prop.key as any).name
+                    translationData[key] = prop.value.value
+                  }
+                })
+              }
+            },
+          })
         } catch (error) {
           throw new Error(`Failed to load translation file ${jsPath}: ${error}`)
         }
@@ -128,7 +113,6 @@ export default function i18n(config: Configuration): AstroIntegration {
           logger.info(`supported locales: ${config.locales.map((l) => l.code).join(", ")}`)
         }
 
-        // Load translations at build time if enabled
         let translations: Record<string, Record<string, string>> = {}
         if (config.translations?.enabled) {
           try {
@@ -140,7 +124,6 @@ export default function i18n(config: Configuration): AstroIntegration {
           }
         }
 
-        // Inject configuration and translations into global scope
         const configScript = `globalThis.__ASTRO_I18N_CONFIG__ = ${JSON.stringify(config)};`
         const translationsScript = `globalThis.__ASTRO_I18N_TRANSLATIONS__ = ${JSON.stringify(translations)};`
 

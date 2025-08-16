@@ -1,43 +1,24 @@
 import fs from 'fs';
 import path from 'path';
+import { parse } from '@babel/parser';
+import traverse from '@babel/traverse';
 
 // src/integration.ts
 function validate(config2) {
-  if (typeof config2.enabled !== "boolean") {
-    throw new Error(`"enabled" must be a boolean`);
+  if (!config2.enabled) {
+    return;
   }
-  if (!config2.enabled) return;
-  if (typeof config2.default !== "string" || !config2.default.trim()) {
-    throw new Error(`"default" must be a non-empty string`);
+  if (!config2.default) {
+    throw new Error('"default" is required when enabled is true');
   }
-  if (!Array.isArray(config2.locales) || config2.locales.length === 0) {
-    throw new Error(`"locales" must be a non-empty array`);
-  }
-  for (const [index, locale] of config2.locales.entries()) {
-    if (typeof locale.code !== "string" || !locale.code.trim()) {
-      throw new Error(`"locales[${index}].code" must be a non-empty string`);
-    }
-    if (typeof locale.name !== "string" || !locale.name.trim()) {
-      throw new Error(`"locales[${index}].name" must be a non-empty string`);
-    }
-    if (typeof locale.endonym !== "string" || !locale.endonym.trim()) {
-      throw new Error(`"locales[${index}].endonym" must be a non-empty string`);
-    }
-    if (locale.dir !== "ltr" && locale.dir !== "rtl") {
-      throw new Error(`"locales[${index}].dir" must be either "ltr" or "rtl"`);
-    }
+  if (!config2.locales || !Array.isArray(config2.locales) || config2.locales.length === 0) {
+    throw new Error('"locales" must be a non-empty array');
   }
   if (!config2.locales.some((l) => l.code === config2.default)) {
-    throw new Error(`"default" must be one of the supported locale codes`);
+    throw new Error('"default" must be one of the supported locale codes');
   }
-  if (config2.translations) {
-    if (config2.translations.enabled === true) {
-      if (typeof config2.translations.path !== "string" || !config2.translations.path.trim()) {
-        throw new Error(
-          `"translations.path" must be a non-empty string when translations are enabled`
-        );
-      }
-    }
+  if (config2.translations?.enabled && !config2.translations.path) {
+    throw new Error('"translations.path" is required when translations.enabled is true');
   }
 }
 function loadTranslations(config2) {
@@ -46,30 +27,50 @@ function loadTranslations(config2) {
     for (const locale of config2.locales) {
       const tsPath = path.join(process.cwd(), config2.translations.path, `${locale.code}.ts`);
       const jsPath = path.join(process.cwd(), config2.translations.path, `${locale.code}.js`);
-      let translationData = {};
+      const translationData = {};
       if (fs.existsSync(tsPath)) {
         try {
           const content = fs.readFileSync(tsPath, "utf8");
-          const match = content.match(/export\s+default\s*(\{[\s\S]*\})\s*;?\s*$/);
-          if (match) {
-            const objectContent = match[1].replace(/(\w+):/g, '"$1":').replace(/'/g, '"');
-            translationData = JSON.parse(objectContent);
-          } else {
-            throw new Error(`Invalid translation file format in ${tsPath}`);
-          }
+          const ast = parse(content, {
+            sourceType: "module",
+            plugins: ["typescript"]
+          });
+          traverse(ast, {
+            ExportDefaultDeclaration(path2) {
+              const declaration = path2.node.declaration;
+              if (declaration.type === "ObjectExpression") {
+                declaration.properties.forEach((prop) => {
+                  if (prop.type === "ObjectProperty" && prop.value.type === "StringLiteral") {
+                    const key = prop.key.type === "StringLiteral" ? prop.key.value : prop.key.name;
+                    translationData[key] = prop.value.value;
+                  }
+                });
+              }
+            }
+          });
         } catch (error) {
           throw new Error(`Failed to load translation file ${tsPath}: ${error}`);
         }
       } else if (fs.existsSync(jsPath)) {
         try {
           const content = fs.readFileSync(jsPath, "utf8");
-          const match = content.match(/export\s+default\s*(\{[\s\S]*\})\s*;?\s*$/);
-          if (match) {
-            const objectContent = match[1].replace(/(\w+):/g, '"$1":').replace(/'/g, '"');
-            translationData = JSON.parse(objectContent);
-          } else {
-            throw new Error(`Invalid translation file format in ${jsPath}`);
-          }
+          const ast = parse(content, {
+            sourceType: "module",
+            plugins: ["typescript"]
+          });
+          traverse(ast, {
+            ExportDefaultDeclaration(path2) {
+              const declaration = path2.node.declaration;
+              if (declaration.type === "ObjectExpression") {
+                declaration.properties.forEach((prop) => {
+                  if (prop.type === "ObjectProperty" && prop.value.type === "StringLiteral") {
+                    const key = prop.key.type === "StringLiteral" ? prop.key.value : prop.key.name;
+                    translationData[key] = prop.value.value;
+                  }
+                });
+              }
+            }
+          });
         } catch (error) {
           throw new Error(`Failed to load translation file ${jsPath}: ${error}`);
         }

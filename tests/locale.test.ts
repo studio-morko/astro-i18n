@@ -12,7 +12,7 @@ const mockConfig: Configuration = {
   ],
   translations: {
     enabled: true,
-    path: "./translate",
+    path: "./translations",
   },
 }
 

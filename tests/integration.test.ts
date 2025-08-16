@@ -78,7 +78,7 @@ describe("i18n Integration", () => {
         const mockParams = createMockParams()
         mockParams.injectScript = mockInjectScript
         mockParams.logger = mockLogger
-        // biome-ignore lint/suspicious/noExplicitAny: Mock for testing Astro integration
+
         setupHook(mockParams as any)
       }
 
@@ -114,7 +114,6 @@ describe("i18n Integration", () => {
       const mockParams = createMockParams()
       mockParams.injectScript = mockInjectScript
       mockParams.logger = mockLogger
-      // biome-ignore lint/suspicious/noExplicitAny: Mock for testing Astro integration
       setupHook(mockParams as any)
 
       expect(mockLogger.info).toHaveBeenCalledWith("enabled: false")
@@ -141,7 +140,6 @@ describe("i18n Integration", () => {
       const mockParams = createMockParams()
       mockParams.injectScript = mockInjectScript
       mockParams.logger = mockLogger
-      // biome-ignore lint/suspicious/noExplicitAny: Mock for testing Astro integration
       setupHook(mockParams as any)
 
       expect(mockLogger.info).toHaveBeenCalledWith("default locale: ar")
@@ -167,7 +165,6 @@ describe("i18n Integration", () => {
       const mockParams = createMockParams()
       mockParams.injectScript = mockInjectScript
       mockParams.logger = mockLogger
-      // biome-ignore lint/suspicious/noExplicitAny: Mock for testing Astro integration
       setupHook(mockParams as any)
 
       expect(mockLogger.info).toHaveBeenCalledWith("enabled: true")
@@ -197,7 +194,6 @@ describe("i18n Integration", () => {
         const mockParams = createMockParams()
         mockParams.injectScript = mockInjectScript
         mockParams.logger = mockLogger
-        // biome-ignore lint/suspicious/noExplicitAny: Mock for testing Astro integration
         setupHook(mockParams as any)
       }).toThrow('"locales" must be a non-empty array')
     })
@@ -224,9 +220,8 @@ describe("i18n Integration", () => {
         const mockParams = createMockParams()
         mockParams.injectScript = mockInjectScript
         mockParams.logger = mockLogger
-        // biome-ignore lint/suspicious/noExplicitAny: Mock for testing Astro integration
         setupHook(mockParams as any)
-      }).toThrow('"locales[0].code" must be a non-empty string')
+      }).toThrow('"default" must be one of the supported locale codes')
     })
 
     it("should validate translations configuration when provided", () => {
@@ -253,9 +248,8 @@ describe("i18n Integration", () => {
         const mockParams = createMockParams()
         mockParams.injectScript = mockInjectScript
         mockParams.logger = mockLogger
-        // biome-ignore lint/suspicious/noExplicitAny: Mock for testing Astro integration
         setupHook(mockParams as any)
-      }).toThrow('"translations.path" must be a non-empty string when translations are enabled')
+      }).toThrow('"translations.path" is required when translations.enabled is true')
     })
 
     it("should throw error when required fields are missing", () => {
@@ -264,14 +258,12 @@ describe("i18n Integration", () => {
         const integration = i18n({
           enabled: true,
           // Missing default and locales
-          // biome-ignore lint/suspicious/noExplicitAny: Testing invalid configuration
         } as any)
 
         const setupHook = integration.hooks["astro:config:setup"]!
         const mockParams = createMockParams()
-        // biome-ignore lint/suspicious/noExplicitAny: Mock for testing Astro integration
         setupHook(mockParams as any)
-      }).toThrow('"default" must be a non-empty string')
+      }).toThrow('"default" is required when enabled is true')
     })
   })
 })

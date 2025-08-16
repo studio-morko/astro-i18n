@@ -28,6 +28,7 @@
   },
   "devDependencies": {
     "@biomejs/biome": "2.1.4",
+    "@types/babel__traverse": "^7.28.0",
     "@types/node": "^24.2.1",
     "@vitest/coverage-v8": "^3.2.4",
     "tsup": "^8.5.0",
@@ -42,5 +43,9 @@
     "locale"
   ],
   "author": "Ere Männistö",
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "@babel/parser": "^7.28.3",
+    "@babel/traverse": "^7.28.3"
+  }
 }
