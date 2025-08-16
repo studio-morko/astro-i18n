@@ -93,6 +93,8 @@ function i18n(config2) {
             throw error;
           }
         }
+        globalThis.__ASTRO_I18N_CONFIG__ = config2;
+        globalThis.__ASTRO_I18N_TRANSLATIONS__ = translations;
         const configScript = `globalThis.__ASTRO_I18N_CONFIG__ = ${JSON.stringify(config2)};`;
         const translationsScript = `globalThis.__ASTRO_I18N_TRANSLATIONS__ = ${JSON.stringify(translations)};`;
         injectScript("head-inline", configScript + translationsScript);

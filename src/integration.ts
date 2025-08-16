@@ -127,6 +127,10 @@ export default function i18n(config: Configuration): AstroIntegration {
           }
         }
 
+        // Make configuration available globally during build time
+        (globalThis as any).__ASTRO_I18N_CONFIG__ = config;
+        (globalThis as any).__ASTRO_I18N_TRANSLATIONS__ = translations;
+
         const configScript = `globalThis.__ASTRO_I18N_CONFIG__ = ${JSON.stringify(config)};`
         const translationsScript = `globalThis.__ASTRO_I18N_TRANSLATIONS__ = ${JSON.stringify(translations)};`
 
