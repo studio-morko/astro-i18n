@@ -1,7 +1,7 @@
 import fs from "node:fs"
 import path from "node:path"
 import { parse } from "@babel/parser"
-import traverse from "@babel/traverse"
+import { default as traverse } from "@babel/traverse"
 import type { AstroIntegration } from "astro"
 import type { Configuration } from "./types.js"
 
