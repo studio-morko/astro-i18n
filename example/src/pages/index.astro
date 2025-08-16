@@ -2,6 +2,9 @@
 import LocaleRedirect from "@mannisto/astro-i18n/LocaleRedirect.astro";
 import { Locale } from "@mannisto/astro-i18n";
 
+console.log("Index page - Locale.default:", Locale.default);
+console.log("Index page - Locale.supported:", Locale.supported);
+
 Locale.set(Locale.default);
 ---
 
